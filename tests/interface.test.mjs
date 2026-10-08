@@ -138,7 +138,7 @@ test("Moderator UI starts, controls a turn and applies a design without resettin
   assert.equal(cloud.state.candidates[0].design.theme, "light");
   assert.equal(cloud.state.candidates[0].deadline, deadline);
   await doc.getElementById("share-links").onclick();
-  assert.equal(doc.querySelectorAll(".link-row").length, 3);
+  assert.equal(doc.querySelectorAll("[data-link-screen]").length, 3);
 });
 test("Display UI renders the requested candidate and hides all moderator controls", async () => {
   const { window, cloud } = await page("?pantalla=2");
@@ -152,4 +152,43 @@ test("Display UI renders the requested candidate and hides all moderator control
   assert.equal(doc.querySelector(".totem-time").textContent, "02:00");
   assert.equal(doc.querySelectorAll(".candidate-card").length, 0);
   assert.match(doc.getElementById("connection").textContent, /Sincronizado/);
+});
+test("Moderator adds a candidate, picks a round and reads the time report", async () => {
+  const { window, cloud } = await page();
+  const doc = window.document;
+  doc.getElementById("settings-btn").onclick();
+  assert.ok(doc.getElementById("settings").hasAttribute("open"));
+  doc.getElementById("add-candidate").onclick();
+  const rows = doc.querySelectorAll("#settings-candidates .edit-row");
+  assert.equal(rows.length, 4);
+  const name = rows[3].querySelector(".edit-name");
+  name.value = "Diana";
+  name.dispatchEvent(new window.Event("input", { bubbles: true }));
+  await doc.getElementById("settings-form").onsubmit({ preventDefault() {} });
+  await flush();
+  assert.equal(cloud.state.candidates.length, 4);
+  assert.equal(cloud.state.candidates[3].name, "Diana");
+  assert.equal(doc.querySelectorAll(".candidate-card").length, 4);
+  assert.match(doc.getElementById("hero-count").textContent, /04 CANDIDATOS/);
+  doc.querySelector('[data-round="r2"]').onclick();
+  await flush();
+  assert.equal(cloud.state.round, "r2");
+  assert.ok(
+    doc.querySelector('[data-round="r2"]').classList.contains("selected"),
+  );
+  doc.getElementById("toggle-4").onclick();
+  await flush();
+  assert.equal(cloud.state.candidates[3].running, true);
+  doc.getElementById("open-report").onclick();
+  assert.equal(doc.querySelectorAll("#report-table tbody tr").length, 4);
+  assert.match(doc.getElementById("report-table").textContent, /Diana/);
+  assert.match(doc.getElementById("live-status").textContent, /Diana · Réplica/);
+});
+test("Overview screen lists every candidate and the active round", async () => {
+  const { window } = await page("?vista=general");
+  const doc = window.document;
+  assert.equal(doc.querySelectorAll(".ov-tile").length, 3);
+  assert.equal(doc.getElementById("ov-round").textContent, "Tiempo libre");
+  assert.equal(doc.getElementById("ov-tile-time-2").textContent, "02:00");
+  assert.equal(doc.querySelectorAll(".candidate-card").length, 0);
 });

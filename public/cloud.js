@@ -1,17 +1,49 @@
 "use strict";
 window.Cloud = (() => {
   const params = new URLSearchParams(location.search),
-    screen = Number(params.get("pantalla") || 0),
-    key = "debate-screen-token-" + screen;
+    view =
+      params.get("vista") === "general"
+        ? "overview"
+        : params.has("pantalla")
+          ? "display"
+          : "admin",
+    screen = view === "display" ? Number(params.get("pantalla")) || 0 : 0,
+    key =
+      view === "overview"
+        ? "debate-overview-token"
+        : "debate-screen-token-" + screen;
+  // Cada tótem recuerda su enlace (30 días): después basta con abrir ?pantalla=N.
+  const store = {
+    get() {
+      try {
+        return localStorage.getItem(key) || sessionStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    },
+    set(value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch {}
+    },
+    clear() {
+      try {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      } catch {}
+    },
+  };
   let token = null;
-  try {
-    const fragment = new URLSearchParams(location.hash.slice(1));
-    token = fragment.get("token") || sessionStorage.getItem(key);
-    if (fragment.has("token")) {
-      sessionStorage.setItem(key, token);
-      history.replaceState(null, "", location.pathname + location.search);
-    }
-  } catch {}
+  if (view !== "admin") {
+    try {
+      const fragment = new URLSearchParams(location.hash.slice(1));
+      token = fragment.get("token") || store.get();
+      if (fragment.has("token")) {
+        store.set(token);
+        history.replaceState(null, "", location.pathname + location.search);
+      }
+    } catch {}
+  }
   // Tótems: cada segundo si el panel del moderador estuvo abierto en los últimos
   // 10 minutos; si no, cada 30 s. El panel entra en reposo tras 3 h sin uso.
   const FAST = 1000,
@@ -28,6 +60,7 @@ window.Cloud = (() => {
     onState = () => {},
     onConnection = () => {},
     links = [],
+    overviewLink = null,
     delay = FAST,
     resting = false,
     lastActivity = Date.now();
@@ -41,7 +74,9 @@ window.Cloud = (() => {
         ...(options.body ? { "Content-Type": "application/json" } : {}),
       };
       const r = await fetch(
-        "/api/debate?op=" + op + (op === "state" ? "&screen=" + screen : ""),
+        "/api/debate?op=" +
+          op +
+          (op === "state" && screen ? "&screen=" + screen : ""),
         {
           credentials: "same-origin",
           cache: "no-store",
@@ -78,6 +113,17 @@ window.Cloud = (() => {
     lastSuccess = Date.now();
     onConnection();
   }
+  function expiredLink(error) {
+    if (error.status !== 401 || view === "admin") return error;
+    store.clear();
+    token = null;
+    return Object.assign(
+      new Error(
+        "Este equipo no tiene un enlace válido o el enlace venció. Abre el enlace completo desde el panel del moderador («Enlaces de tótems»).",
+      ),
+      { status: 401 },
+    );
+  }
   async function refresh() {
     if (busy) return;
     try {
@@ -85,8 +131,8 @@ window.Cloud = (() => {
     } catch (error) {
       lastSuccess = 0;
       onConnection();
-      if (error.status === 401 && !screen) location.reload();
-      throw error;
+      if (error.status === 401 && view === "admin") location.reload();
+      throw expiredLink(error);
     }
   }
   async function command(command) {
@@ -134,19 +180,23 @@ window.Cloud = (() => {
     const r = await fetch("/api/debate?op=image&id=" + encodeURIComponent(id), {
       credentials: "same-origin",
       headers: token ? { Authorization: "Bearer " + token } : {},
-      cache: "no-store",
     });
     if (!r.ok) throw new Error("No se pudo cargar la imagen.");
     return URL.createObjectURL(await r.blob());
   }
+  function shareURL(query, value) {
+    const url = new URL(location.origin + "/");
+    for (const [k, v] of Object.entries(query)) url.searchParams.set(k, v);
+    url.hash = new URLSearchParams({ token: value }).toString();
+    return url.href;
+  }
   async function getLinks() {
     const data = await request("links", { method: "POST", body: "{}" });
-    links = data.links.map((x) => {
-      const url = new URL(location.origin + "/");
-      url.searchParams.set("pantalla", x.screen);
-      url.hash = new URLSearchParams({ token: x.token }).toString();
-      return { screen: x.screen, url: url.href };
-    });
+    links = data.links.map((x) => ({
+      screen: x.screen,
+      url: shareURL({ pantalla: x.screen }, x.token),
+    }));
+    overviewLink = shareURL({ vista: "general" }, data.overview);
     return links;
   }
   function link(id) {
@@ -159,23 +209,18 @@ window.Cloud = (() => {
     async function load() {
       try {
         accept(await request("state"));
-        if (
-          screen &&
-          role === "display" &&
-          screen !== Number(params.get("pantalla"))
-        )
-          throw new Error("Enlace de tótem incorrecto.");
-        if (!screen && role !== "admin")
+        if (view === "admin" && role !== "admin")
           throw new Error("Usa el enlace de tu tótem.");
         if (role === "admin") await getLinks();
         box.hidden = true;
         return true;
       } catch (e) {
-        error.textContent = e.message;
+        const shown = expiredLink(e);
+        error.textContent = shown.message;
         box.hidden = false;
-        form.hidden = !!screen || e.status !== 401;
+        form.hidden = view !== "admin" || shown.status !== 401;
         document.getElementById("cloud-retry").hidden =
-          e.status === 401 && !screen;
+          shown.status === 401 && view === "admin";
         return false;
       }
     }
@@ -291,13 +336,16 @@ window.Cloud = (() => {
       return resting;
     },
     get waiting() {
-      return role === "display" && !moderatorActive();
+      return role !== "admin" && !moderatorActive();
     },
     get presence() {
       return presence;
     },
     get links() {
       return links;
+    },
+    get overviewLink() {
+      return overviewLink;
     },
   };
 })();

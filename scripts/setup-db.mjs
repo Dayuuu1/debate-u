@@ -1,9 +1,7 @@
-import { readFile } from "node:fs/promises";
 import { getDB } from "../lib/db.mjs";
+import { readSchema } from "../lib/schema.mjs";
 try {
-  await getDB().initialize(
-    await readFile(new URL("../db/001_initial.sql", import.meta.url), "utf8"),
-  );
+  await getDB().initialize(await readSchema());
   console.log("Base de datos preparada. Los datos existentes se conservan.");
 } catch (e) {
   console.error(

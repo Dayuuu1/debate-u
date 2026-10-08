@@ -16,6 +16,6 @@ CREATE TABLE IF NOT EXISTS debate_login_limits (
  window_start timestamptz NOT NULL DEFAULT clock_timestamp()
 );
 CREATE TABLE IF NOT EXISTS debate_presence (
- screen integer PRIMARY KEY CHECK (screen BETWEEN 0 AND 3),
+ screen integer PRIMARY KEY CHECK (screen BETWEEN 0 AND 99),
  seen_at timestamptz NOT NULL DEFAULT clock_timestamp()
 );

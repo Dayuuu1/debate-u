@@ -1,54 +1,66 @@
 # Debate al Rectorado · UNAMAD
 
-Proyecto completo para **Vercel + PostgreSQL en Neon**, basado en HTML, CSS y JavaScript, con una API de Node.js. No requiere React ni ChatGPT para funcionar.
+Sistema para moderar los tiempos de un debate: un panel protegido para el moderador, un tótem vertical por candidato y una vista general para el proyector o la transmisión. Todo se sincroniza por Internet a través de **Vercel + PostgreSQL en Neon**. Está hecho con HTML, CSS y JavaScript, y una API en Node.js; no requiere frameworks.
+
+![Panel del moderador](docs/capturas/panel.jpg)
 
 ## Qué incluye
 
-- Panel de moderación protegido por contraseña.
-- Tres cronómetros independientes; solo un candidato puede tener un turno activo.
-- Iniciar, pausar, reiniciar, sumar o restar segundos.
-- Foto, flyer, nombre, cargo, color y diseño por candidato.
-- Tótems verticales 9:16 con modo claro/oscuro y fondos institucionales.
-- Enlaces de solo lectura para equipos diferentes.
-- Configuración e imágenes guardadas en PostgreSQL.
-- Acciones basadas en la hora del servidor, con control de versiones para evitar sobrescrituras simultáneas.
-- Scripts de instalación, archivo SQL, pruebas automáticas y configuración de Vercel.
+**Para el moderador**
 
-**Esta entrega es una copia independiente. No modifica el sitio anterior.** Los datos personalizados del navegador de la versión anterior no se migran automáticamente: carga otra vez los nombres y las fotos en esta instalación.
+- De 1 a 8 candidatos: se agregan, quitan y reordenan desde «Configurar debate».
+- **Rondas del debate** (por ejemplo Presentación, Réplica y Cierre), editables. Al elegir una ronda, todos los cronómetros toman su duración y los tótems muestran su nombre.
+- **Siguiente orador** con un clic o con la tecla `→`: pausa el turno actual e inicia el siguiente.
+- **Tiempo excedido**: al pasar de 00:00 el contador sigue en rojo con «+» (`+00:15`). Se puede desactivar para que el turno se detenga en cero.
+- Iniciar, pausar, reiniciar y sumar o restar segundos. Solo un candidato habla a la vez.
+- **Informe de tiempos**: cuánto habló realmente cada candidato en cada ronda, con exportación a CSV (Excel) e impresión o PDF.
+- Atajos de teclado (`1`–`8`, `Espacio`, `→`), aviso sonoro, tema claro u oscuro y modo reposo automático.
+
+**Para las pantallas**
+
+- Tótems verticales 9:16 con foto o flyer, cargo, color y tema por candidato.
+- Cada tótem **recuerda su enlace** 30 días: después de abrirlo una vez, basta con `?pantalla=N`.
+- Evitan que la pantalla se apague, ocultan el cursor y funcionan en modo quiosco.
+- **Vista general 16:9** con todos los candidatos y el orador actual, para el proyector. Tiene una variante con fondo transparente para OBS.
+- Vista previa con el logo de la UNAMAD cuando se comparte un enlace por WhatsApp o redes.
+
+**Técnico**
+
+- Acciones con la hora del servidor y control de versiones, para evitar sobrescrituras entre paneles.
+- Enlaces de solo lectura firmados para tótems y proyector.
+- Las pruebas automáticas se ejecutan en cada despliegue: si fallan, Vercel no publica.
+- Limpieza automática de imágenes que ya no usa ningún candidato.
+
+| Configurar debate | Informe de tiempos |
+| --- | --- |
+| ![Configurar debate](docs/capturas/configurar.jpg) | ![Informe de tiempos](docs/capturas/informe.jpg) |
+
+| Tótem 9:16 | Vista general 16:9 |
+| --- | --- |
+| ![Tótem](docs/capturas/totem.jpg) | ![Vista general](docs/capturas/vista-general.jpg) |
 
 ## 1. Requisitos
 
 - Node.js 24 (`package.json` fija `24.x`; Vercel usa esa versión automáticamente).
-- Cuenta de Neon: <https://console.neon.tech>.
-- Cuenta de Vercel y, para el flujo recomendado, un repositorio de GitHub.
+- Cuenta de Neon (<https://console.neon.tech>) o Neon desde el Marketplace de Vercel.
+- Cuenta de Vercel y un repositorio de GitHub.
 
 ## 2. Crear la base de datos
 
-1. Crea un proyecto PostgreSQL en Neon en la región **AWS US East 1 (N. Virginia)**. `vercel.json` ejecuta la API en `iad1` (Washington, D.C.); base y API en la misma zona evitan demoras en cada consulta.
-2. Pulsa **Connect** y copia la cadena de conexión PostgreSQL. Puede ser la conexión con pooling.
-3. Esa cadena será `DATABASE_URL`. Conserva `sslmode=require` si viene incluido.
+1. Crea un proyecto PostgreSQL en Neon en la región **AWS US East 1 (N. Virginia)**. `vercel.json` ejecuta la API en `iad1` (Washington, D.C.); tener base y API en la misma zona evita demoras.
+2. Copia la cadena de conexión (puede ser la de pooling). Será `DATABASE_URL`.
 
-Si tu base ya existe en otra región, cambia `"regions"` en `vercel.json` por la más cercana: São Paulo (`aws-sa-east-1`) → `gru1`; Ohio (`aws-us-east-2`) → `cle1`; Oregón (`aws-us-west-2`) → `pdx1`; Fráncfort (`aws-eu-central-1`) → `fra1`.
+Si conectas Neon desde **Vercel → Storage**, deja la casilla «Create database branch for deployment» desmarcada. Usa el prefijo `DATABASE` para que la variable se llame `DATABASE_URL`.
 
-El adaptador de esta entrega usa el driver HTTP de **Neon**. Para PostgreSQL de otro proveedor hay que cambiar `lib/db.mjs` por un adaptador compatible; no basta con reemplazar la URL.
+Si tu base está en otra región, cambia `"regions"` en `vercel.json` por la más cercana: São Paulo (`aws-sa-east-1`) → `gru1`; Ohio (`aws-us-east-2`) → `cle1`; Oregón (`aws-us-west-2`) → `pdx1`; Fráncfort (`aws-eu-central-1`) → `fra1`.
 
-## 3. Configurar y ejecutar en tu PC
-
-Descomprime el ZIP y abre una terminal en la carpeta que contiene `package.json`.
+## 3. Configurar en tu PC
 
 ```bash
 npm install
 ```
 
-Si no existe `.env.local`, créalo a partir del ejemplo y genera una clave con `npm run secret`:
-
-```powershell
-Copy-Item .env.example .env.local   # PowerShell
-cp .env.example .env.local          # macOS/Linux
-npm run secret
-```
-
-Abre `.env.local` con tu editor y completa:
+Crea `.env.local` a partir de `.env.example`, genera una clave con `npm run secret` y completa:
 
 ```dotenv
 DATABASE_URL=postgresql://usuario:clave@tu-host.neon.tech/neondb?sslmode=require
@@ -56,88 +68,74 @@ ADMIN_PASSWORD="tu-contraseña-de-al-menos-12-caracteres"
 SESSION_SECRET="pega-la-clave-generada-con-npm-run-secret"
 ```
 
-Estas variables son privadas del servidor. No uses prefijos `VITE_` ni `NEXT_PUBLIC_`.
-
-Prepara la base de datos y levanta el servidor:
+Prepara la base y, si quieres probar en tu PC, levanta el servidor:
 
 ```bash
 npm run db:setup
 npm run dev
 ```
 
-Abre **http://localhost:3000** e ingresa con `ADMIN_PASSWORD`.
-
-`db:setup` crea las tablas e inserta el debate inicial si no existe. Se puede volver a ejecutar: no borra la configuración existente. No abras `public/index.html` con doble clic; necesita la API.
+`db:setup` aplica en orden todos los archivos de `db/` y crea el debate inicial si no existe. Se puede ejecutar varias veces sin borrar datos. **Vuelve a ejecutarlo cuando actualices el proyecto**, para aplicar las migraciones nuevas.
 
 ## 4. Subir a Vercel
 
-1. Crea un repositorio de GitHub con el contenido de esta carpeta. No subas `.env.local` ni `node_modules`; `.gitignore` ya los excluye.
-2. En Vercel, elige **Add New → Project** e importa el repositorio.
-3. Selecciona **Other** como framework y la carpeta que contiene `package.json` como raíz.
-4. Verifica: **Build Command:** `npm run build`; **Output Directory:** `public`; **Install Command:** `npm install` (o `npm ci`). El archivo `vercel.json` ya declara la configuración principal.
-5. En **Environment Variables**, añade `DATABASE_URL`, `ADMIN_PASSWORD` y `SESSION_SECRET` para **Production**. Usa los mismos valores de `.env.local`.
-6. Despliega. Si agregaste variables después, realiza un nuevo despliegue.
+1. En Vercel, elige **Add New → Project**, importa el repositorio y deja **Other** como framework. `vercel.json` ya declara el build y la carpeta `public`.
+2. En **Environment Variables**, añade `ADMIN_PASSWORD` y `SESSION_SECRET` (los mismos de `.env.local`). Si no conectaste Neon desde Storage, añade también `DATABASE_URL`.
+3. Despliega. **Cada vez que agregues o cambies una variable, haz Redeploy.** Si falta alguna, el sitio indica exactamente cuál.
 
-La base de datos debe estar inicializada antes de entrar al panel. Si `npm run db:setup` apuntó a la misma `DATABASE_URL`, ya está preparada.
+Cada `git push` a `main` vuelve a desplegar. El build revisa la sintaxis y los recursos, y ejecuta las pruebas.
 
-Abre los tótems con el **dominio de producción** (por ejemplo `https://tu-proyecto.vercel.app`). Las URL de Preview están protegidas por defecto con el inicio de sesión de Vercel y un tótem no podría abrirlas.
+Abre los tótems con el **dominio de producción** (por ejemplo `https://tu-proyecto.vercel.app`). Las URL de cada despliegue (`…-git-…` o con letras aleatorias) están protegidas con el inicio de sesión de Vercel.
 
-Para probar previews de Vercel sin afectar el debate real, usa otra base de datos o una rama de Neon y sus variables para Preview. Si conectaste Neon desde el Marketplace de Vercel, revisa que Preview no comparta la `DATABASE_URL` de producción.
+La vista previa al compartir usa `https://debate-u-nine.vercel.app/assets/og-debate.jpg`. Si cambias de dominio, actualiza esa dirección en `public/index.html`.
 
-`.vercelignore` excluye pruebas, documentación y los PNG originales de los fondos: el sitio usa las versiones WebP (unos 70–100 KB en lugar de 1,7 MB).
+## 5. Durante el debate
 
-## 5. Conectar los tótems
+1. **Configurar debate**: candidatos (el orden define el número de tótem), rondas, aviso amarillo y tiempo excedido.
+2. **Personalizar tótem** en cada tarjeta: foto o flyer, cargo, color y tema.
+3. **Enlaces de tótems**: copia el enlace completo de cada tótem y ábrelo una vez en su equipo. Ese equipo lo recuerda 30 días.
+4. Abre el panel unos minutos antes. Cada tótem está listo cuando su tarjeta indica **● Conectado**.
+5. Elige la ronda, inicia el primer turno y usa **Siguiente orador** (`→`).
+6. Al terminar, abre **Informe de tiempos** y expórtalo a CSV o PDF.
 
-1. Entra al panel y configura los candidatos, tiempos y diseños.
-2. Pulsa **Enlaces de tótems**.
-3. Copia el enlace del candidato 1 y ábrelo en el navegador del primer tótem. Repite con los otros dos.
-4. Configura las pantallas en orientación vertical y pulsa **Pantalla completa**.
-5. Abre el panel del moderador unos minutos antes de empezar. Cada tótem está listo cuando su tarjeta en el panel indica **● Conectada** (puede tardar hasta 30 segundos).
-6. Inicia y pausa los turnos desde el panel del moderador.
+**Tótem en modo quiosco (sin barras del navegador).** Después de abrir el enlace completo una vez, crea un acceso directo:
 
-Desactiva la suspensión y el protector de pantalla en los equipos de los tótems.
+```text
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk "https://tu-proyecto.vercel.app/?pantalla=1"
+```
 
-Los tótems pueden estar en equipos distintos. Cada equipo necesita acceso al sitio y conexión a Internet; no es necesario que todos estén en la misma red local.
+Usa el mismo perfil de Chrome con el que abriste el enlace. Para salir del modo quiosco, pulsa `Alt+F4`. Desactiva también la suspensión del equipo.
 
-Para probar con equipos distintos mientras desarrollas en tu PC, usa un despliegue de Vercel. Un enlace `localhost` apunta a cada equipo local y no a la computadora del moderador.
+**Proyector o transmisión.** En «Enlaces de tótems» está la **Vista general (16:9)**. Para OBS, usa la variante con fondo transparente como *Fuente de navegador* a 1920 × 1080.
 
-Los enlaces de tótem permiten leer el estado y las imágenes, **no modificar el debate**. Son válidos durante 30 días. Al abrirse, el token se retira de la barra de direcciones y se conserva en esa pestaña. Para compartir, usa siempre el botón del panel, no la URL que queda en el tótem después de abrirlo. Para invalidar todos los enlaces y sesiones, cambia `SESSION_SECRET` en Vercel y vuelve a desplegar.
+Los enlaces permiten ver el debate, **no modificarlo**. Para invalidar todos los enlaces y sesiones, cambia `SESSION_SECRET` en Vercel y haz Redeploy.
 
-## 6. Sincronización y límites prácticos
+## 6. Sincronización y límites
 
-- Mientras el panel del moderador está abierto (o lo estuvo en los últimos 10 minutos), cada pantalla consulta el servidor cada segundo. Una acción puede tardar alrededor de un segundo más la latencia de red en llegar a los tótems. No es un sistema de sincronización audiovisual por fotogramas.
-- Sin panel abierto, los tótems consultan cada 30 segundos y muestran «esperando el panel del moderador»; nadie más puede cambiar el debate. Al abrir el panel vuelven a 1 segundo en un máximo de 30 segundos.
-- El panel entra en reposo tras 3 horas sin uso del mouse o el teclado y sin ningún turno corriendo. Deja de consultar el servidor hasta que muevas el mouse o pulses una tecla.
-- Cada consulta de estado es una sola petición a la base de datos.
-- El servidor fija la hora de vencimiento. Cada navegador calcula la cuenta regresiva usando una compensación de reloj; no se escribe un registro por cada décima de segundo.
-- Si se corta Internet, la pantalla continúa la última cuenta regresiva recibida y muestra un aviso. No recibe cambios nuevos hasta reconectar. El panel bloquea controles mientras está desconectado.
-- El tiempo no se pausa automáticamente si se cierra el moderador: conserva la hora de vencimiento. Al volver a abrir, se recupera el estado de la base de datos.
-- Dos paneles autorizados pueden ver el debate. Si mandan acciones simultáneas, una se confirma y la otra recibe un aviso para revisar el estado; no se reintentan comandos automáticamente.
-- El aviso sonoro sale del navegador del moderador, después de una interacción. No silencia micrófonos ni controla una consola de audio.
-- Las imágenes se reducen a un máximo de 2160 píxeles por lado y se comprimen antes de enviarse. El archivo comprimido debe pesar menos de 2 MB. Se guardan en PostgreSQL para no depender de otro servicio de almacenamiento.
-- Las cargas antiguas se conservan aunque se reemplace una foto. Para grandes volúmenes conviene migrar archivos a un servicio de objetos y almacenar solo la referencia en PostgreSQL.
-- El sondeo genera peticiones a Vercel y consultas a Neon: con 4 pantallas activas son unas 14 400 por hora. Aun con las consultas reducidas, las pestañas abiertas impiden que Neon se suspenda. Cierra paneles y tótems cuando termine el evento; revisa las cuotas vigentes de tus planes.
+- Con el panel del moderador abierto (o abierto en los últimos 10 minutos), las pantallas consultan el servidor cada segundo. Sin panel, lo hacen cada 30 segundos y muestran «esperando el panel del moderador».
+- El panel entra en reposo tras 3 horas sin uso y sin turnos corriendo; vuelve al mover el mouse.
+- El servidor fija la hora de vencimiento y cada pantalla calcula la cuenta regresiva localmente. Si se corta Internet, continúa con el último tiempo recibido y muestra un aviso.
+- El informe registra el tiempo real en uso de la palabra de cada turno, incluido el excedido. Se conserva al cambiar de ronda o de configuración, y se borra con «Reiniciar informe».
+- Las imágenes se comprimen en el navegador (máximo 2160 px y 2 MB) y se guardan en PostgreSQL. Las que nadie usa se eliminan después de 6 horas.
+- Cierra el panel y las pantallas al terminar el evento: las pestañas abiertas siguen haciendo peticiones a Vercel y Neon.
 
 ## 7. Archivos principales
 
 | Ruta | Función |
 | --- | --- |
-| `public/index.html` | Interfaz, formularios y acceso |
-| `public/app.js` | Controles del moderador y vistas de tótems |
-| `public/cloud.js` | Comunicación con API, sincronización y enlaces |
-| `public/totem.js` | Composición visual y carga de imágenes |
-| `public/*.css` | Diseño, temas e identidad UNAMAD |
-| `public/assets/` | Logos y fondos incluidos |
+| `public/index.html` | Interfaz, diálogos y metadatos |
+| `public/app.js` | Panel, tótems, vista general, rondas e informe |
+| `public/cloud.js` | API, sincronización y enlaces recordados |
+| `public/totem.js` | Composición del tótem e imágenes |
+| `public/timer-core.js` | Cálculo de tiempos, tiempo excedido y tiempo hablado |
+| `public/*.css` | Diseño e identidad UNAMAD (`debate.css`: funciones nuevas) |
 | `api/debate.js` | Entrada de la función de Vercel |
+| `lib/state.mjs` | Reglas del debate, rondas y validaciones |
 | `lib/handler.mjs` | Rutas, permisos, imágenes y comandos |
-| `lib/state.mjs` | Reglas de tiempo y validaciones |
 | `lib/repository.mjs` | Consultas SQL y control de versiones |
-| `lib/db.mjs` | Adaptador de Neon |
-| `lib/auth.mjs` | Contraseña, cookie y tokens de tótem |
-| `db/001_initial.sql` | Tablas PostgreSQL |
-| `scripts/setup-db.mjs` | Inicialización de tablas y primer debate |
-| `vercel.json` | Configuración del despliegue |
-| `.env.example` | Variables que debes completar |
+| `lib/auth.mjs` | Contraseña, cookie y enlaces firmados |
+| `lib/schema.mjs`, `db/*.sql` | Esquema y migraciones |
+| `tests/` | Pruebas de API, reglas e interfaz |
 
 ## 8. Verificaciones
 
@@ -146,20 +144,23 @@ npm test
 npm run build
 ```
 
-Las pruebas de API usan PGlite (motor PostgreSQL local de pruebas) y no requieren tus credenciales. Cubren permisos, contraseña, tokens, vencimientos, pausas, conflictos entre paneles, imágenes y persistencia. También hay pruebas de interacción de la interfaz con un DOM simulado; no sustituyen una prueba visual en un navegador. El build comprueba la sintaxis y los recursos del proyecto.
+Las pruebas usan PGlite (PostgreSQL local en memoria) y no requieren credenciales. Cubren:
 
-La entrega no incluye una cuenta de Neon configurada ni un despliegue de Vercel en tu cuenta. Debes completar esas variables. La conexión real a Neon y la validación visual en tus monitores se realizan después de desplegar.
+- Permisos, contraseña y enlaces firmados.
+- Tiempo excedido, rondas, candidatos variables e informe.
+- Conflictos entre paneles, imágenes y migración de datos antiguos.
+- Interacción con la interfaz en un DOM simulado.
 
 ## Solución rápida de problemas
 
 | Mensaje | Qué revisar |
 | --- | --- |
-| Falta configurar variables | Completa las tres variables; la clave de sesión debe tener 32 caracteres o más y la contraseña al menos 12. Redeploy en Vercel. |
-| No se pudo acceder a la base | Revisa `DATABASE_URL`, ejecuta `npm run db:setup` y comprueba que la base esté disponible. |
-| Contraseña incorrecta | Usa el valor de `ADMIN_PASSWORD` del entorno desplegado, no tu cuenta de Vercel. |
-| Enlace de tótem inválido | Genera y copia un enlace nuevo desde el panel. |
-| Una acción no se confirmó | Revisa el estado que llegó del servidor antes de repetir; pudo haberse confirmado durante un corte de red. |
-| Las fotos anteriores no aparecen | La versión antigua guardaba imágenes en el navegador de otro sitio. Súbelas de nuevo a esta instalación. |
-| No abre una ventana | Permite ventanas emergentes o utiliza «Enlaces de tótems». |
+| Falta configurar en el servidor: … | El mensaje nombra la variable. Corrígela en Vercel y haz Redeploy. |
+| No se pudo acceder a la base | Revisa `DATABASE_URL` y ejecuta `npm run db:setup`. |
+| El tótem dice que no tiene un enlace válido | Abre el enlace completo desde «Enlaces de tótems» en ese equipo. |
+| Tótem «sin candidato asignado» | Hay menos candidatos que tótems; agrégalos en «Configurar debate». |
+| Tótem «esperando el panel del moderador» | Abre el panel; se sincroniza en menos de 30 segundos. |
+| Una acción no se confirmó | Revisa el estado antes de repetir; pudo confirmarse durante un corte de red. |
+| No abre una ventana | Permite ventanas emergentes o usa «Enlaces de tótems». |
 
-Documentación de referencia: [Vercel Functions](https://vercel.com/docs/functions/runtimes/node-js), [vercel.json](https://vercel.com/docs/project-configuration/vercel-json), [Neon Serverless Driver](https://github.com/neondatabase/serverless).
+Referencias: [Vercel Functions](https://vercel.com/docs/functions/runtimes/node-js), [vercel.json](https://vercel.com/docs/project-configuration/vercel-json), [Neon Serverless Driver](https://github.com/neondatabase/serverless).

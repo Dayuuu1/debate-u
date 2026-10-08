@@ -1,10 +1,15 @@
 import test, { after, before } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
-import { readFile } from "node:fs/promises";
 import { PGlite } from "@electric-sql/pglite";
 import { repository } from "../lib/repository.mjs";
-import { defaultState, reduceCommand, remaining } from "../lib/state.mjs";
+import {
+  defaultState,
+  normalizeState,
+  reduceCommand,
+  remaining,
+} from "../lib/state.mjs";
+import { readSchema } from "../lib/schema.mjs";
 import { createHandler } from "../lib/handler.mjs";
 import { signToken, verifyToken } from "../lib/auth.mjs";
 let pg, db, server, url, cookie;
@@ -16,9 +21,7 @@ before(async () => {
   pg = new PGlite();
   await pg.waitReady;
   db = repository(async (q, p = []) => (await pg.query(q, p)).rows);
-  await db.initialize(
-    await readFile(new URL("../db/001_initial.sql", import.meta.url), "utf8"),
-  );
+  await db.initialize(await readSchema());
   server = http.createServer(createHandler(() => db));
   await new Promise((r) => server.listen(0, "127.0.0.1", r));
   url = "http://127.0.0.1:" + server.address().port;
@@ -70,10 +73,21 @@ test("Server clock, exclusive turns, pauses, expiration and design persistence",
     32000,
   );
   assert.equal(s.candidates[1].deadline, deadline);
-  assert.equal(remaining(s.candidates[1], deadline + 1000), 0);
-  s = reduceCommand(s, { type: "adjust", id: 2, ms: 15000 }, deadline + 1000);
+  // Con tiempo excedido (por defecto) el turno sigue corriendo después de 00:00.
+  assert.equal(remaining(s.candidates[1], deadline + 1000), -1000);
+  const over = reduceCommand(
+    s,
+    { type: "adjust", id: 2, ms: 15000 },
+    deadline + 1000,
+  );
+  assert.equal(over.candidates[1].running, true);
+  assert.equal(remaining(over.candidates[1], deadline + 1000), 14000);
+  // Sin tiempo excedido, el turno se detiene en 00:00 como antes.
+  const strict = { ...s, overtime: false };
+  s = reduceCommand(strict, { type: "adjust", id: 2, ms: 15000 }, deadline + 1000);
   assert.equal(s.candidates[1].remaining, 15000);
   assert.equal(s.candidates[1].running, false);
+  assert.equal(s.candidates[1].spoken.libre, deadline - 31000);
   assert.throws(() =>
     reduceCommand(s, { type: "adjust", id: 2, ms: Infinity }, 1),
   );
@@ -205,9 +219,7 @@ test("Authentication, read-only displays, atomic revisions and image persistence
     ).response.status,
     400,
   );
-  await db.initialize(
-    await readFile(new URL("../db/001_initial.sql", import.meta.url), "utf8"),
-  );
+  await db.initialize(await readSchema());
   assert.equal(
     (await db.snapshot()).state.candidates[0].name,
     "Candidato con foto",
@@ -232,4 +244,91 @@ test("Repeated failed login is limited by the database", async () => {
   for (let i = 0; i < 10; i++)
     assert.equal(await db.allowLogin("limit-test"), true);
   assert.equal(await db.allowLogin("limit-test"), false);
+});
+test("Rounds, variable candidates and the speaking-time report", () => {
+  let s = reduceCommand(defaultState(), { type: "round", id: "r2" }, 0);
+  assert.equal(s.round, "r2");
+  assert.ok(s.candidates.every((c) => c.remaining === 120000));
+  s = reduceCommand(s, { type: "toggle", id: 1 }, 1000);
+  s = reduceCommand(s, { type: "toggle", id: 2 }, 31000);
+  s = reduceCommand(s, { type: "round", id: "r3" }, 41000);
+  assert.equal(s.candidates[0].spoken.r2, 30000);
+  assert.equal(s.candidates[1].spoken.r2, 10000);
+  assert.ok(s.candidates.every((c) => !c.running && c.remaining === 60000));
+  s = reduceCommand(
+    s,
+    {
+      type: "settings",
+      event: "Debate de prueba",
+      warning: 20,
+      overtime: true,
+      candidates: [
+        { id: 2, name: "Beatriz", duration: 90000 },
+        { name: "Nuevo", duration: 60000 },
+        { id: 1, name: "Ana", duration: 90000 },
+        { name: "Cuarto", duration: 60000 },
+      ],
+      rounds: [
+        { id: "r3", name: "Cierre", duration: 45000 },
+        { name: "Preguntas del público", duration: 90000 },
+      ],
+    },
+    50000,
+  );
+  assert.deepEqual(
+    s.candidates.map((c) => [c.id, c.name]),
+    [
+      [1, "Beatriz"],
+      [2, "Nuevo"],
+      [3, "Ana"],
+      [4, "Cuarto"],
+    ],
+  );
+  assert.equal(s.candidates[0].spoken.r2, 10000);
+  assert.equal(s.candidates[2].spoken.r2, 30000);
+  assert.deepEqual(
+    s.rounds.map((r) => r.id),
+    ["r3", "r2"],
+  );
+  assert.equal(s.round, "r3");
+  assert.throws(() => reduceCommand(s, { type: "toggle", id: 5 }, 0));
+  assert.throws(() =>
+    reduceCommand(s, { type: "round", id: "no-existe" }, 0),
+  );
+  s = reduceCommand(s, { type: "clearReport" }, 60000);
+  assert.ok(s.candidates.every((c) => Object.keys(c.spoken).length === 0));
+  const legacy = normalizeState({
+    event: "Antiguo",
+    warning: 30,
+    sound: false,
+    candidates: [
+      { id: 1, name: "A", duration: 1000, remaining: 1000, running: false, deadline: null },
+    ],
+  });
+  assert.equal(legacy.overtime, true);
+  assert.equal(legacy.rounds.length, 3);
+  assert.deepEqual(legacy.candidates[0].spoken, {});
+});
+test("Overview links are read-only and extra totems report presence", async () => {
+  const overview = signToken({ role: "overview" }, 60000);
+  const seen = await api("state", { auth: null, bearer: overview });
+  assert.equal(seen.response.status, 200);
+  assert.equal(seen.data.role, "overview");
+  assert.equal(
+    (
+      await api("command", {
+        method: "POST",
+        auth: null,
+        bearer: overview,
+        data: { version: seen.data.version, command: { type: "pauseAll" } },
+      })
+    ).response.status,
+    403,
+  );
+  const fifth = signToken({ role: "display", screen: 5 }, 60000);
+  await api("state", { auth: null, bearer: fifth });
+  const again = await api("state", { auth: null, bearer: fifth });
+  assert.ok(again.data.presence.some((p) => p.screen === 5));
+  assert.ok(again.data.presence.some((p) => p.screen === 99));
+  assert.equal(verifyToken(signToken({ role: "display", screen: 9 }, 1000)), null);
 });

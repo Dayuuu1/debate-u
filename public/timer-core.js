@@ -1,41 +1,25 @@
 (function (root) {
-  const remaining = (c, now = Date.now()) =>
-    Math.max(0, c.running ? c.deadline - now : c.remaining);
-  const pause = (c, now = Date.now()) => ({
-    ...c,
-    remaining: remaining(c, now),
-    running: false,
-    deadline: null,
-  });
-  const start = (s, id, now = Date.now()) => ({
-    ...s,
-    candidates: s.candidates.map((c) =>
-      c.id === id
-        ? {
-            ...c,
-            remaining: remaining(c, now),
-            running: remaining(c, now) > 0,
-            deadline: remaining(c, now) > 0 ? now + remaining(c, now) : null,
-          }
-        : pause(c, now),
-    ),
-  });
-  const adjust = (c, ms, now = Date.now()) => {
-    const value = Math.max(0, remaining(c, now) + ms);
-    return {
-      ...c,
-      remaining: value,
-      running: c.running && value > 0,
-      deadline: c.running && value > 0 ? now + value : null,
-    };
+  const FREE_ROUND = "libre";
+  // Negativo = tiempo excedido; sin "overtime" se detiene en 00:00.
+  const remaining = (c, now = Date.now(), overtime = true) => {
+    const ms = c.running ? c.deadline - now : c.remaining;
+    return overtime ? ms : Math.max(0, ms);
   };
-  const format = (ms) => {
-    const n = Math.ceil(Math.max(0, ms) / 1000);
-    return (
-      String(Math.floor(n / 60)).padStart(2, "0") +
-      ":" +
-      String(n % 60).padStart(2, "0")
-    );
+  const clock = (n) =>
+    String(Math.floor(n / 60)).padStart(2, "0") +
+    ":" +
+    String(n % 60).padStart(2, "0");
+  const format = (ms) =>
+    ms < 0 ? "+" + clock(Math.floor(-ms / 1000)) : clock(Math.ceil(ms / 1000));
+  const elapsed = (ms) => clock(Math.floor(Math.max(0, ms) / 1000));
+  // Tiempo en uso de la palabra de un candidato en una ronda, incluido el turno en curso.
+  const spoken = (s, c, key, now = Date.now()) => {
+    let ms = c.spoken?.[key] || 0;
+    if (c.running && c.startedAt && key === (s.round ?? FREE_ROUND)) {
+      const end = s.overtime ? now : Math.min(now, c.deadline);
+      ms += Math.max(0, end - c.startedAt);
+    }
+    return ms;
   };
-  root.TimerCore = { remaining, pause, start, adjust, format };
+  root.TimerCore = { FREE_ROUND, remaining, format, elapsed, spoken };
 })(typeof module !== "undefined" ? module.exports : window);

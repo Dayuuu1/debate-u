@@ -9,12 +9,28 @@
       name="description"
       content="Central de moderación del debate al Rectorado de la UNAMAD, con cronómetros y tótems verticales personalizados."
     />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="UNAMAD" />
+    <meta property="og:title" content="Debate al Rectorado · UNAMAD" />
+    <meta
+      property="og:description"
+      content="Cronómetros sincronizados y tótems del debate al Rectorado de la Universidad Nacional Amazónica de Madre de Dios."
+    />
+    <meta
+      property="og:image"
+      content="https://debate-u-nine.vercel.app/assets/og-debate.jpg"
+    />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/png" href="assets/unamad-escudo-oficial.png" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="totem.css" />
     <link rel="stylesheet" href="unamad.css" />
     <link rel="stylesheet" href="brand-assets.css" />
     <link rel="stylesheet" href="cloud.css" />
+    <link rel="stylesheet" href="debate.css" />
   </head>
   <body>
     <div id="cloud-gate" class="cloud-gate">
@@ -49,7 +65,7 @@
       <div class="dialog-head">
         <div>
           <span class="eyebrow">GUÍA DE CONEXIÓN</span>
-          <h2>Tres candidatos. Tres pantallas.</h2>
+          <h2>Un tótem por candidato.</h2>
         </div>
         <button class="icon-btn" data-close="help" aria-label="Cerrar">
           ✕
@@ -58,36 +74,45 @@
       <ol class="guide">
         <li>
           <strong>Prepara el debate.</strong>
-          <p>Configura nombres, tiempos, fotos y diseños desde el panel.</p>
+          <p>
+            En «Configurar debate» agrega hasta 8 candidatos, define las rondas
+            y su duración. Personaliza la foto y el diseño de cada tótem.
+          </p>
         </li>
         <li>
           <strong>Obtén los enlaces.</strong>
           <p>
-            Pulsa «Enlaces de tótems» y abre cada enlace en su equipo. No se
-            necesita la contraseña del moderador en esas pantallas.
+            Pulsa «Enlaces de tótems» y abre cada enlace completo una vez en su
+            equipo. Ese equipo lo recuerda 30 días: después basta con abrir la
+            dirección corta (?pantalla=N). No se necesita la contraseña del
+            moderador.
           </p>
         </li>
         <li>
           <strong>Activa el modo vertical.</strong>
           <p>
             Configura la pantalla en orientación vertical y activa «Pantalla
-            completa» en el tótem.
+            completa». Para un tótem sin barras del navegador, crea un acceso
+            directo de Chrome con
+            <code>chrome.exe --kiosk "https://…/?pantalla=1"</code>. El tótem
+            evita que la pantalla se apague y oculta el cursor.
           </p>
         </li>
         <li>
           <strong>Controla los turnos.</strong>
           <p>
-            Todos los equipos deben tener conexión a Internet. Con este panel
-            abierto, las pantallas consultan los cambios cada segundo y ejecutan
-            la cuenta regresiva localmente. Abre el panel unos minutos antes:
-            cada tótem está listo cuando su tarjeta indica «● Conectada».
+            Elige la ronda, inicia el turno y usa «Siguiente orador» (tecla →)
+            para pasar la palabra. Con este panel abierto, las pantallas se
+            sincronizan cada segundo. Abre el panel unos minutos antes: cada
+            tótem está listo cuando su tarjeta indica «● Conectado».
           </p>
         </li>
       </ol>
       <div class="notice">
-        Si se pierde Internet, el cronómetro continúa con el último tiempo
-        recibido y muestra un aviso. Los cambios nuevos llegan al recuperar la
-        conexión. Este proyecto no controla micrófonos.
+        Para el proyector o una transmisión en vivo, usa la «Vista general» de
+        «Enlaces de tótems» (con fondo transparente para OBS). Si se pierde
+        Internet, el cronómetro continúa con el último tiempo recibido y muestra
+        un aviso. Este proyecto no controla micrófonos.
       </div>
       <button class="primary wide" data-close="help">Entendido</button>
     </dialog>
@@ -96,7 +121,7 @@
         <div class="dialog-head">
           <div>
             <span class="eyebrow">PREPARACIÓN DEL DEBATE</span>
-            <h2>Configurar participantes</h2>
+            <h2>Configurar debate</h2>
           </div>
           <button
             type="button"
@@ -110,7 +135,27 @@
         <label class="field"
           >Nombre del evento<input id="event-name" maxlength="80" required
         /></label>
-        <div id="settings-fields"></div>
+        <div class="section-label">
+          PARTICIPANTES <span id="candidate-count"></span>
+        </div>
+        <p class="small muted">
+          El orden define el tótem: el primero se muestra en el tótem 1. Tiempo
+          en segundos.
+        </p>
+        <div id="settings-candidates" class="edit-list"></div>
+        <button type="button" class="secondary add-row" id="add-candidate">
+          + Agregar candidato
+        </button>
+        <div class="section-label">RONDAS DEL DEBATE</div>
+        <p class="small muted">
+          Al elegir una ronda en el panel, todos los cronómetros toman su
+          duración y los tótems muestran su nombre.
+        </p>
+        <div id="settings-rounds" class="edit-list"></div>
+        <button type="button" class="secondary add-row" id="add-round">
+          + Agregar ronda
+        </button>
+        <div class="section-label">AVISOS</div>
         <label class="field"
           >Aviso amarillo cuando resten (segundos)<input
             id="warning-seconds"
@@ -119,9 +164,15 @@
             max="300"
             required
         /></label>
+        <label class="check-field"
+          ><input type="checkbox" id="overtime-enabled" /><span
+            >Contar tiempo excedido después de 00:00 (en rojo, con «+»). Si lo
+            desactivas, el turno se detiene en 00:00.</span
+          ></label
+        >
         <p class="muted small">
-          Guardar actualiza los nombres y reinicia los tres cronómetros con los
-          tiempos indicados.
+          Guardar reinicia los cronómetros con los tiempos indicados. El informe
+          de tiempos se conserva.
         </p>
         <div class="dialog-actions">
           <button type="button" class="secondary" data-close="settings">
@@ -129,6 +180,33 @@
           ><button type="submit" class="primary">Guardar configuración</button>
         </div>
       </form>
+    </dialog>
+    <dialog id="report">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">TRANSPARENCIA DEL DEBATE</span>
+          <h2>Informe de tiempos</h2>
+        </div>
+        <button
+          class="icon-btn no-print"
+          data-close="report"
+          aria-label="Cerrar"
+        >
+          ✕
+        </button>
+      </div>
+      <p class="report-meta" id="report-meta"></p>
+      <div class="report-scroll">
+        <table class="report-table" id="report-table"></table>
+      </div>
+      <p class="small muted" id="report-note"></p>
+      <div class="dialog-actions no-print">
+        <button class="subtle" id="clear-report">Reiniciar informe</button
+        ><button class="secondary" id="export-csv">Exportar CSV</button
+        ><button class="primary" id="print-report">
+          Imprimir o guardar PDF
+        </button>
+      </div>
     </dialog>
     <dialog id="confirm">
       <h2 id="confirm-title">¿Reiniciar los tiempos?</h2>
@@ -327,8 +405,9 @@
         </button>
       </div>
       <p class="small muted">
-        Abre cada enlace en el navegador de su tótem. Permiten visualizar, no
-        controlar. Validez: 30 días.
+        Abre cada enlace completo una vez en el navegador de su tótem; ese
+        equipo lo recordará 30 días. Los enlaces permiten visualizar, no
+        controlar.
       </p>
       <div id="screen-link-list"></div>
     </dialog>

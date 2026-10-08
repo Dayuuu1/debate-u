@@ -1,6 +1,6 @@
 "use strict";
 (function (root) {
-  const palette = ["#d60050", "#d60050", "#d60050"];
+  const palette = ["#d60050"];
   function normalize(design = {}, id = 1) {
     const d = design && typeof design === "object" ? design : {};
     return {
@@ -72,7 +72,7 @@
     assetCache.set(id, promise);
     return promise;
   }
-  function paintStage(stage, c, event, ms, status, mood) {
+  function paintStage(stage, c, event, ms, status, mood, caption) {
     const d = normalize(c.design, c.id);
     stage.className = `totem-stage theme-${d.theme} layout-${d.layout} backdrop-${d.backdrop} ${mood || ""}`;
     stage.style.setProperty("--totem-accent", d.accent);
@@ -81,6 +81,7 @@
       if (el.textContent !== text) el.textContent = text;
     };
     set(".totem-event", event);
+    set(".totem-time-caption", caption || "TIEMPO RESTANTE");
     set(".totem-label", d.label);
     set(".totem-name", c.name);
     set(".totem-role", d.role);
