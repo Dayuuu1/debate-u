@@ -1,0 +1,707 @@
+/* Identity inspired by the UNAMAD reference supplied for this debate. */
+:root {
+  --teal: #b50043;
+  --navy: #290d1d;
+  --unamad: #d60050;
+  --unamad-deep: #79002d;
+  background: #f6f3f5;
+  color: #2c2630;
+}
+header {
+  height: 88px;
+  background: #2a101f;
+  border-bottom: 3px solid #d60050;
+  padding: 0 4%;
+  box-shadow: 0 1px 0 #ffffff13;
+}
+.brand {
+  gap: 19px;
+}
+.brand-wordmark {
+  color: white;
+  font-family: Manrope, sans-serif;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -1.3px;
+  line-height: 1;
+}
+.brand-wordmark span {
+  display: block;
+  letter-spacing: 0.5px;
+  font-family: "DM Sans", sans-serif;
+  font-size: 6.8px;
+  line-height: 1.45;
+  font-weight: 500;
+  margin-top: 5px;
+  color: #dfc6d3;
+}
+.brand-separator {
+  width: 1px;
+  height: 35px;
+  background: #79405b;
+}
+.brand-program {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.25px;
+  color: #f1dfe8;
+}
+.brand-program span {
+  display: block;
+  font-size: 8px;
+  color: #b58c9f;
+  letter-spacing: 1.1px;
+  margin-top: 6px;
+}
+.header-right {
+  gap: 19px;
+}
+.pill {
+  border-color: #764059;
+  color: #ecd8e3;
+}
+.header-help {
+  color: #ead4df;
+}
+.panel-theme {
+  border-color: #79475e;
+  color: #ead4df;
+}
+.header-clock {
+  color: #d0adbf;
+}
+main {
+  padding: 27px 4% 25px;
+  max-width: 1490px;
+}
+.institutional-hero {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  background: linear-gradient(110deg, #5e062c 0%, #94003a 58%, #d2004c 100%);
+  color: white;
+  min-height: 224px;
+  border-radius: 15px;
+  overflow: hidden;
+  margin-bottom: 28px;
+  border: 1px solid #99003b;
+  box-shadow: 0 8px 30px #71012d13;
+}
+.institutional-hero-copy {
+  position: relative;
+  z-index: 1;
+  width: 54%;
+  padding: 30px 34px;
+}
+.hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  font-weight: 700;
+  color: #efb6ce;
+}
+.hero-eyebrow i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffa6ca;
+}
+.institutional-hero h1 {
+  font-size: clamp(24px, 2.6vw, 36px);
+  line-height: 1.18;
+  letter-spacing: -1.1px;
+  margin: 12px 0 9px;
+  max-width: 580px;
+}
+.institutional-hero p {
+  font-size: 12px;
+  color: #efc7d7;
+}
+.hero-tags {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+.hero-tags span {
+  padding: 5px 8px;
+  border: 1px solid #ffffff30;
+  background: #ffffff08;
+  border-radius: 4px;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.institutional-hero-visual {
+  width: 46%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #cc0048;
+  overflow: hidden;
+}
+.institutional-hero-visual img {
+  width: 100%;
+  height: auto;
+  display: block;
+  position: relative;
+  z-index: 0;
+}
+.institutional-hero-visual:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(90deg, #98003a, transparent);
+  z-index: 1;
+}
+.workspace-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+.workspace-heading h2 {
+  font-size: 21px;
+  letter-spacing: -0.55px;
+  margin-top: 5px;
+}
+.workspace-heading .eyebrow {
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  color: #967386;
+}
+.toolbar {
+  border-color: #e7dfe4;
+  margin-bottom: 24px;
+}
+.primary {
+  background: #ad003e;
+  border-color: #ad003e;
+}
+.primary:hover {
+  background: #920035;
+}
+.preset.selected {
+  background: #fae7ef;
+  color: #a0003b;
+  border-color: #eab3c7;
+}
+.live-note {
+  color: #a80040;
+}
+.candidate-card {
+  border-color: #e6dce2;
+  box-shadow: 0 4px 16px #40002505;
+}
+.candidate-card.active {
+  border-color: #c4839d;
+  box-shadow: 0 0 0 2px #aa003d0b;
+}
+.candidate-label {
+  letter-spacing: 1.1px;
+}
+.avatar {
+  border-radius: 50%;
+}
+.timer-box {
+  background: #f7f5f7;
+  --timer-color: #382331;
+}
+.timer-status {
+  color: #887581;
+}
+.active .timer-box {
+  background: #eff8f3;
+  --timer-color: #08704f;
+}
+.totem-customize {
+  background: #fcf2f6;
+  border-color: #efdae3;
+  color: #9b2c54;
+}
+.totem-customize span:last-child {
+  color: #9b7283;
+}
+.totem-customize:hover {
+  background: #f8e7ef;
+}
+.open-screen {
+  color: #6c4357;
+  border-color: #efe7ec;
+}
+.open-screen .opened {
+  color: #9b2c54;
+}
+.guide-symbol {
+  background: #fae9f0;
+  color: #9b2854;
+}
+.guide-card,
+.shortcuts {
+  border-color: #e7dfe5;
+}
+.text-btn {
+  color: #a5003b;
+}
+.guide-card p,
+.shortcuts .shortcut-row {
+  color: #8a7b86;
+}
+.footer strong {
+  color: #795365;
+}
+.heading p .vertical-pill {
+  color: #a1003e;
+  background: #fce3ed;
+}
+input[type="checkbox"],
+.design-options input[type="range"] {
+  accent-color: #b50043;
+}
+.layout-choice.selected,
+.theme-choice.selected {
+  background: #fff0f6;
+  color: #a5003e;
+  border-color: #b50043;
+}
+.layout-choice.selected {
+  box-shadow: 0 0 0 1px #b50043;
+}
+.preview-caption span:last-child {
+  color: #b00043;
+}
+.preview-moods button.selected {
+  border-color: #b50043;
+  color: #a4003d;
+  background: #fae6ee;
+}
+.preview-shell {
+  border-color: #341826;
+}
+.design-preview-column {
+  background: #ece5ea;
+}
+.institutional-note {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #947586;
+  margin: -3px 0 12px;
+}
+.upload-zone {
+  border-color: #cfacbc;
+  background: #fcf7f9;
+}
+.upload-zone input::file-selector-button {
+  color: #a2003d;
+  border-color: #ddbccc;
+}
+.notice {
+  background: #f8edf2;
+  color: #7c5065;
+}
+.guide li::marker {
+  color: #b00043;
+}
+.design-actions {
+  background: inherit;
+}
+.dark-panel {
+  background: #171019;
+  --line: #493340;
+  --muted: #b8a4b2;
+  color: #eee4eb;
+}
+.dark-panel .institutional-hero {
+  border-color: #8c1744;
+}
+.dark-panel .workspace-heading h2 {
+  color: #eee5eb;
+}
+.dark-panel .toolbar,
+.dark-panel .candidate-card,
+.dark-panel .guide-card,
+.dark-panel .shortcuts {
+  background: #241b27;
+  border-color: #493340;
+}
+.dark-panel .secondary,
+.dark-panel .subtle,
+.dark-panel .icon-btn,
+.dark-panel .adjust-controls button {
+  background: #302333;
+  border-color: #4c3744;
+  color: #deccd9;
+}
+.dark-panel .timer-box {
+  background: #1c1520;
+  --timer-color: #eedfeb;
+}
+.dark-panel .open-screen {
+  background: #241b27;
+  border-color: #3d2b38;
+  color: #d5b9c9;
+}
+.dark-panel .totem-customize {
+  background: #391e30;
+  border-color: #593048;
+  color: #ecb8cf;
+}
+.dark-panel .totem-customize span:last-child {
+  color: #c68fa9;
+}
+.dark-panel .preset {
+  background: #352639;
+  color: #d6bacb;
+}
+.dark-panel .preset.selected {
+  background: #521d37;
+  color: #ffc5dc;
+  border-color: #7c3052;
+}
+.dark-panel .avatar {
+  background: #412335;
+  color: #ee7ea9;
+}
+.dark-panel .guide-symbol {
+  background: #432336;
+  color: #e9a9c3;
+}
+.dark-panel .text-btn,
+.dark-panel .live-note {
+  color: #f193b8;
+}
+.dark-panel dialog,
+.dark-panel .design-options {
+  background: #241b27;
+  color: #eadde6;
+}
+.dark-panel .field input,
+.dark-panel .field select {
+  background: #302333;
+  color: #e5d5df;
+  border-color: #593f50;
+}
+.dark-panel .layout-choice,
+.dark-panel .theme-choice,
+.dark-panel .upload-zone {
+  background: #332337;
+  color: #d3b5c8;
+  border-color: #5c4051;
+}
+.dark-panel .layout-choice.selected,
+.dark-panel .theme-choice.selected {
+  background: #522039;
+  color: #ffc2da;
+  border-color: #c85b8a;
+}
+.dark-panel .notice {
+  background: #3c2534;
+  color: #e0bdce;
+}
+.dark-panel .institutional-note {
+  color: #bd91a8;
+}
+.dark-panel kbd {
+  background: #382738;
+  border-color: #5c4052;
+  color: #d7bdcc;
+}
+.dark-panel .active .timer-box {
+  background: #15342e;
+  --timer-color: #8bdfbd;
+}
+.dark-panel .warning .timer-box {
+  background: #3d321b;
+  --timer-color: #f7cd79;
+}
+.dark-panel .expired .timer-box {
+  background: #3c232b;
+  --timer-color: #ff9c96;
+}
+/* A shared institutional masthead keeps all candidates on an equal visual footing. */
+.totem-stage {
+  --totem-bg: #1e1020;
+  --totem-surface: #321a2e;
+  --totem-ink: #fff7fc;
+  --totem-muted: #c8abc0;
+  --totem-line: #ead0df24;
+  border-top: 0;
+  grid-template-rows: 17% 32% 18% 27% 6%;
+}
+.totem-stage.theme-light {
+  --totem-bg: #fffbfd;
+  --totem-surface: #f4e9ef;
+  --totem-ink: #34212e;
+  --totem-muted: #856576;
+  --totem-line: #5e264329;
+}
+.totem-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  border: 0;
+  min-height: 0;
+  background: #ab003e;
+}
+.totem-university-banner {
+  width: 100%;
+  height: calc(100% - 6.8cqw);
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+.totem-university-banner img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 53%;
+}
+.totem-event-ribbon {
+  height: 6.8cqw;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4%;
+  background: #870032;
+  border-top: 1px solid #ffffff26;
+}
+.totem-event {
+  max-width: 100%;
+  font-size: 1.95cqw;
+  line-height: 1.3;
+  letter-spacing: 0.12em;
+  color: white;
+  text-align: center;
+  font-weight: 700;
+}
+.totem-art {
+  margin: 5% 7% 0;
+  border-radius: 1.2cqw;
+  background: var(--totem-surface);
+  border: 1px solid var(--totem-line);
+}
+.totem-pattern {
+  background:
+    radial-gradient(
+      ellipse at 50% 10%,
+      color-mix(in srgb, var(--totem-accent) 26%, transparent),
+      transparent 75%
+    ),
+    linear-gradient(
+      145deg,
+      transparent 65%,
+      var(--totem-line) 65.2%,
+      transparent 65.5%
+    );
+}
+.totem-identity {
+  padding-top: 3.6%;
+}
+.totem-label {
+  color: var(--totem-muted);
+  font-size: 1.9cqw;
+}
+.totem-clock-block {
+  border-top: 1px solid var(--totem-line);
+}
+.totem-time-caption {
+  font-size: 1.7cqw;
+  letter-spacing: 0.25em;
+}
+.totem-footer {
+  margin: 0;
+  padding: 0 7%;
+  background: linear-gradient(90deg, #77002c, #a6003e);
+  color: #f5d5e3;
+  position: relative;
+}
+.totem-footer:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 0.8cqw;
+  background: repeating-linear-gradient(
+    135deg,
+    #ffffffc9 0,
+    #ffffffc9 1px,
+    transparent 1px,
+    transparent 5px
+  );
+  opacity: 0.55;
+}
+.totem-footer span:first-child {
+  color: white;
+  font-size: 2cqw;
+  letter-spacing: 0.07em;
+}
+.totem-footer span:last-child {
+  font-size: 1.3cqw;
+  letter-spacing: 0.1em;
+}
+.totem-stage.layout-flyer {
+  grid-template-rows: 17% 43% 9% 25% 6%;
+}
+.layout-flyer .totem-art {
+  border: 0;
+  margin-top: 3%;
+}
+.totem-stage.layout-minimal {
+  grid-template-rows: 17% 0 29% 48% 6%;
+  background:
+    radial-gradient(
+      ellipse at 95% 40%,
+      color-mix(in srgb, var(--totem-accent) 16%, transparent),
+      transparent 65%
+    ),
+    var(--totem-bg);
+}
+.layout-minimal .totem-identity {
+  padding-top: 3%;
+}
+.layout-minimal .totem-time {
+  font-size: 26cqw;
+}
+.layout-minimal .totem-track {
+  margin-top: 6cqw;
+}
+.signage-screen {
+  background: #120a13;
+}
+.signage-screen.light-surround {
+  background: #eae1e7;
+}
+.preview-note {
+  color: #8e7786;
+}
+.preview-caption {
+  color: #876c7f;
+}
+@media (min-width: 1550px) {
+  main {
+    padding-top: 32px;
+  }
+  .institutional-hero {
+    min-height: 240px;
+  }
+}
+@media (max-width: 1100px) {
+  .header-right .pill {
+    display: none;
+  }
+  .institutional-hero-copy {
+    padding: 25px;
+  }
+  .institutional-hero h1 {
+    font-size: 29px;
+  }
+}
+@media (max-width: 800px) {
+  .brand-program {
+    font-size: 9px;
+  }
+  .brand-program span {
+    font-size: 7px;
+  }
+  .brand {
+    gap: 12px;
+  }
+  .header-right {
+    gap: 9px;
+  }
+  .institutional-hero-copy {
+    width: 56%;
+    padding: 22px;
+  }
+  .institutional-hero-visual {
+    width: 44%;
+  }
+  .institutional-hero h1 {
+    font-size: 25px;
+  }
+  .institutional-hero {
+    min-height: 210px;
+  }
+}
+@media (max-width: 600px) {
+  header {
+    height: 80px;
+    padding: 0 4%;
+  }
+  .brand-wordmark {
+    font-size: 23px;
+  }
+  .brand-wordmark span {
+    font-size: 5.8px;
+  }
+  .brand-program,
+  .brand-separator {
+    display: none;
+  }
+  .header-help {
+    font-size: 10px;
+  }
+  .institutional-hero {
+    flex-direction: column;
+    min-height: 0;
+  }
+  .institutional-hero-copy {
+    width: 100%;
+    padding: 24px;
+  }
+  .institutional-hero h1 {
+    font-size: 28px;
+    max-width: 360px;
+  }
+  .institutional-hero-visual {
+    width: 100%;
+    height: auto;
+    max-height: none;
+  }
+  .institutional-hero-visual img {
+    width: 100%;
+    height: auto;
+  }
+  .institutional-hero-visual:before {
+    display: none;
+  }
+  .hero-tags {
+    margin-top: 17px;
+  }
+  .workspace-heading h2 {
+    font-size: 18px;
+  }
+  .workspace-heading .secondary {
+    font-size: 11px;
+    padding: 10px;
+  }
+  .workspace-heading .eyebrow {
+    font-size: 7px;
+  }
+  .institutional-hero p {
+    font-size: 12px;
+  }
+  .hero-eyebrow {
+    font-size: 8px;
+  }
+  .toolbar {
+    margin-bottom: 20px;
+  }
+  .preview-shell {
+    border-color: #341826;
+  }
+}
+.totem-stage .totem-name {
+  color: var(--totem-ink);
+}

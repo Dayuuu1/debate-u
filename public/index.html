@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#970039" />
+    <title>Debate al Rectorado · UNAMAD</title>
+    <meta
+      name="description"
+      content="Central de moderación del debate al Rectorado de la UNAMAD, con cronómetros y tótems verticales personalizados."
+    />
+    <link rel="icon" type="image/png" href="assets/unamad-escudo-oficial.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="totem.css" />
+    <link rel="stylesheet" href="unamad.css" />
+    <link rel="stylesheet" href="brand-assets.css" />
+    <link rel="stylesheet" href="cloud.css" />
+  </head>
+  <body>
+    <div id="cloud-gate" class="cloud-gate">
+      <section class="cloud-gate-card">
+        <img src="assets/unamad-logo-oficial.png" alt="UNAMAD" />
+        <h1>Debate al Rectorado</h1>
+        <p>
+          Acceso del moderador. Los tótems se abren con sus enlaces de
+          visualización.
+        </p>
+        <form id="login-form" hidden>
+          <label for="admin-password">Contraseña del moderador</label
+          ><input
+            id="admin-password"
+            type="password"
+            required
+            autocomplete="current-password"
+          /><button class="primary wide" type="submit">
+            Ingresar al panel
+          </button>
+        </form>
+        <p id="login-error" class="cloud-error" role="alert">
+          Conectando con el debate…
+        </p>
+        <button id="cloud-retry" class="secondary" hidden>
+          Reintentar conexión
+        </button>
+      </section>
+    </div>
+    <div id="app"></div>
+    <dialog id="help">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">GUÍA DE CONEXIÓN</span>
+          <h2>Tres candidatos. Tres pantallas.</h2>
+        </div>
+        <button class="icon-btn" data-close="help" aria-label="Cerrar">
+          ✕
+        </button>
+      </div>
+      <ol class="guide">
+        <li>
+          <strong>Prepara el debate.</strong>
+          <p>Configura nombres, tiempos, fotos y diseños desde el panel.</p>
+        </li>
+        <li>
+          <strong>Obtén los enlaces.</strong>
+          <p>
+            Pulsa «Enlaces de tótems» y abre cada enlace en su equipo. No se
+            necesita la contraseña del moderador en esas pantallas.
+          </p>
+        </li>
+        <li>
+          <strong>Activa el modo vertical.</strong>
+          <p>
+            Configura la pantalla en orientación vertical y activa «Pantalla
+            completa» en el tótem.
+          </p>
+        </li>
+        <li>
+          <strong>Controla los turnos.</strong>
+          <p>
+            Todos los equipos deben tener conexión a Internet. Con este panel
+            abierto, las pantallas consultan los cambios cada segundo y ejecutan
+            la cuenta regresiva localmente. Abre el panel unos minutos antes:
+            cada tótem está listo cuando su tarjeta indica «● Conectada».
+          </p>
+        </li>
+      </ol>
+      <div class="notice">
+        Si se pierde Internet, el cronómetro continúa con el último tiempo
+        recibido y muestra un aviso. Los cambios nuevos llegan al recuperar la
+        conexión. Este proyecto no controla micrófonos.
+      </div>
+      <button class="primary wide" data-close="help">Entendido</button>
+    </dialog>
+    <dialog id="settings">
+      <form id="settings-form">
+        <div class="dialog-head">
+          <div>
+            <span class="eyebrow">PREPARACIÓN DEL DEBATE</span>
+            <h2>Configurar participantes</h2>
+          </div>
+          <button
+            type="button"
+            class="icon-btn"
+            data-close="settings"
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
+        </div>
+        <label class="field"
+          >Nombre del evento<input id="event-name" maxlength="80" required
+        /></label>
+        <div id="settings-fields"></div>
+        <label class="field"
+          >Aviso amarillo cuando resten (segundos)<input
+            id="warning-seconds"
+            type="number"
+            min="1"
+            max="300"
+            required
+        /></label>
+        <p class="muted small">
+          Guardar actualiza los nombres y reinicia los tres cronómetros con los
+          tiempos indicados.
+        </p>
+        <div class="dialog-actions">
+          <button type="button" class="secondary" data-close="settings">
+            Cancelar</button
+          ><button type="submit" class="primary">Guardar configuración</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="confirm">
+      <h2 id="confirm-title">¿Reiniciar los tiempos?</h2>
+      <p id="confirm-description">
+        Se detendrán los turnos y se restaurará el tiempo asignado a cada
+        candidato.
+      </p>
+      <div class="dialog-actions">
+        <button class="secondary" id="cancel-confirm">Cancelar</button
+        ><button class="primary" id="accept-confirm">Reiniciar</button>
+      </div>
+    </dialog>
+    <dialog id="design-editor">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">UNAMAD · ESTUDIO DE TÓTEMS</span>
+          <h2 id="design-title">Personalizar tótem</h2>
+        </div>
+        <button
+          class="icon-btn"
+          data-close="design-editor"
+          aria-label="Cerrar editor"
+        >
+          ✕
+        </button>
+      </div>
+      <div class="design-workspace">
+        <form id="design-form" class="design-options">
+          <div class="section-label">01 / COMPOSICIÓN</div>
+          <div class="layout-options">
+            <button type="button" class="layout-choice" data-layout="portrait">
+              <span class="mini-layout"><i></i><b>02:00</b></span
+              >Retrato institucional</button
+            ><button type="button" class="layout-choice" data-layout="flyer">
+              <span class="mini-layout"
+                ><i style="flex: 2"></i><b>02:00</b></span
+              >Flyer + tiempo</button
+            ><button type="button" class="layout-choice" data-layout="minimal">
+              <span class="mini-layout" style="justify-content: center"
+                ><b>02:00</b></span
+              >Solo tiempo
+            </button>
+          </div>
+          <div class="section-label">02 / APARIENCIA</div>
+          <p class="institutional-note">
+            Cabecera UNAMAD y diseño común para los tres candidatos. Personaliza
+            el color de acento si lo necesitas.
+          </p>
+          <div class="theme-options">
+            <button type="button" class="theme-choice" data-theme="light">
+              ☀ &nbsp; Claro</button
+            ><button type="button" class="theme-choice" data-theme="dark">
+              ☾ &nbsp; Oscuro
+            </button>
+          </div>
+          <label class="field"
+            >Fondo del tótem<select id="design-backdrop">
+              <option value="institutional">
+                Institucional · textura y detalles geométricos
+              </option>
+              <option value="solid">Limpio · color uniforme</option>
+            </select></label
+          ><label class="color-field"
+            >Color principal
+            <input
+              type="color"
+              id="design-color"
+              aria-label="Color principal del tótem" /><code
+              id="design-color-value"
+            ></code
+            ><span class="swatches"
+              ><button
+                type="button"
+                class="swatch"
+                data-color="#d60050"
+                style="background: #d60050"
+                aria-label="Fucsia de la referencia UNAMAD"
+              ></button
+              ><button
+                type="button"
+                class="swatch"
+                data-color="#8f0038"
+                style="background: #8f0038"
+                aria-label="Vino"
+              ></button
+              ><button
+                type="button"
+                class="swatch"
+                data-color="#303039"
+                style="background: #303039"
+                aria-label="Grafito"
+              ></button
+              ><button
+                type="button"
+                class="swatch"
+                data-color="#b59050"
+                style="background: #b59050"
+                aria-label="Dorado"
+              ></button></span
+          ></label>
+          <div id="image-options">
+            <div class="section-label">03 / IMAGEN DEL CANDIDATO</div>
+            <div class="upload-zone">
+              <strong id="upload-label">Subir fotografía</strong>
+              <p id="upload-hint">
+                Usa una foto de buena calidad, de preferencia vertical.
+              </p>
+              <input
+                id="design-file"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                aria-label="Subir foto o flyer"
+              />
+              <p>JPG, PNG o WebP · Hasta 25 MB</p>
+            </div>
+            <div class="upload-actions">
+              <span id="upload-status" role="status">Sin imagen</span
+              ><button type="button" id="remove-image">Quitar imagen</button>
+            </div>
+            <label class="field" id="fit-field"
+              >Ajuste del flyer<select id="design-fit">
+                <option value="contain">Mostrar completo (sin recortar)</option>
+                <option value="cover">
+                  Llenar el espacio (recortar bordes)
+                </option>
+              </select></label
+            ><label class="field"
+              >Encuadre vertical
+              <input
+                id="design-position"
+                type="range"
+                min="0"
+                max="100"
+                value="50"
+              /><span class="small muted"
+                >Arriba ← → Abajo · Se aplica cuando la imagen se recorta.</span
+              ></label
+            >
+          </div>
+          <div class="section-label">04 / IDENTIDAD</div>
+          <label class="field"
+            >Nombre del candidato<input
+              id="design-name"
+              maxlength="50"
+              required
+          /></label>
+          <div id="identity-extras">
+            <label class="field"
+              >Etiqueta superior<input
+                id="design-label"
+                maxlength="35"
+                placeholder="Ej. LISTA 01" /></label
+            ><label class="field"
+              >Cargo o agrupación<input
+                id="design-role"
+                maxlength="70"
+                placeholder="Ej. Candidato al rectorado"
+            /></label>
+          </div>
+          <p class="small muted">
+            La imagen y el diseño se guardan en PostgreSQL y se muestran en los
+            tótems conectados.
+          </p>
+          <div class="design-actions">
+            <button type="button" class="secondary" data-close="design-editor">
+              Cancelar</button
+            ><button type="submit" class="primary" id="apply-design">
+              Aplicar al tótem
+            </button>
+          </div>
+        </form>
+        <aside class="design-preview-column">
+          <div class="preview-caption">
+            <span>VISTA PREVIA</span><span>9:16 · VERTICAL</span>
+          </div>
+          <div class="preview-shell" id="design-preview"></div>
+          <div class="preview-moods" aria-label="Probar avisos del cronómetro">
+            <button type="button" data-preview="normal" class="selected">
+              Normal</button
+            ><button type="button" data-preview="warning">Aviso</button
+            ><button type="button" data-preview="expired">Final</button>
+          </div>
+          <p class="preview-note">
+            El cronómetro permanece visible debajo de la imagen. Los cambios se
+            proyectan al pulsar «Aplicar al tótem».
+          </p>
+        </aside>
+      </div>
+    </dialog>
+    <div id="toast" role="status"></div>
+    <dialog id="screen-links">
+      <div class="dialog-head">
+        <h2>Enlaces para los tótems</h2>
+        <button class="icon-btn" data-close="screen-links" aria-label="Cerrar">
+          ✕
+        </button>
+      </div>
+      <p class="small muted">
+        Abre cada enlace en el navegador de su tótem. Permiten visualizar, no
+        controlar. Validez: 30 días.
+      </p>
+      <div id="screen-link-list"></div>
+    </dialog>
+    <script src="cloud.js"></script>
+    <script src="timer-core.js"></script>
+    <script src="totem.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

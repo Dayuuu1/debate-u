@@ -1,0 +1,463 @@
+/* Independent official marks, live typography and generated decorative backgrounds. */
+.official-logo-plate {
+  background: white;
+  border-radius: 6px;
+  padding: 7px 12px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.official-logo-plate img {
+  width: 179px;
+  height: auto;
+  display: block;
+}
+header .brand {
+  gap: 18px;
+}
+.brand-program {
+  font-size: 10px;
+}
+.brand-program span {
+  font-size: 7px;
+}
+.institutional-hero {
+  --hero-ink: #541a38;
+  --hero-muted: #966580;
+  min-height: 230px;
+  background: #fff9fc url("assets/unamad-fondo-claro-v2.webp") center right/cover
+    no-repeat;
+  color: var(--hero-ink);
+  border: 1px solid #e6ccda;
+  box-shadow: 0 6px 25px #57001f09;
+}
+.institutional-hero-copy {
+  width: 57%;
+  padding: 34px 36px;
+}
+.institutional-hero h1 {
+  font-size: clamp(25px, 2.55vw, 36px);
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  color: var(--hero-ink);
+  max-width: 590px;
+}
+.hero-eyebrow {
+  color: var(--hero-muted);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+.hero-eyebrow i {
+  background: #d60050;
+}
+.institutional-hero p {
+  color: var(--hero-muted);
+  font-size: 12px;
+}
+.hero-tags {
+  gap: 10px;
+  margin-top: 20px;
+}
+.hero-tags span {
+  color: #99416c;
+  border: 1px solid #d7adc275;
+  background: #fff7fb99;
+  font-size: 8px;
+  padding: 5px 8px;
+}
+.institutional-hero-visual {
+  width: 43%;
+  padding: 25px 5.5% 25px 22px;
+  background: transparent;
+  flex-direction: column;
+  gap: 17px;
+  align-items: center;
+  justify-content: center;
+}
+.institutional-hero-visual:before {
+  display: none;
+}
+.hero-identity {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.institutional-hero-visual .hero-crest {
+  height: 76px;
+  width: auto;
+  max-width: none;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.hero-wordmark {
+  font-family: Manrope, sans-serif;
+  font-size: 38px;
+  font-weight: 800;
+  letter-spacing: -1.8px;
+  line-height: 1.1;
+  color: #d60050;
+}
+.hero-wordmark span {
+  display: block;
+  font-family: "DM Sans", sans-serif;
+  font-size: 9.8px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.45;
+  margin-top: 6px;
+  color: var(--hero-muted);
+}
+.hero-identity-line {
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #be84a1, transparent);
+}
+.hero-location {
+  font-size: 7px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--hero-muted);
+  text-align: center;
+}
+.dark-panel .institutional-hero {
+  --hero-ink: #fff5fb;
+  --hero-muted: #deb2c8;
+  background-image: url("assets/unamad-fondo-oscuro-v2.webp");
+  background-color: #210d1b;
+  border-color: #683348;
+}
+.dark-panel .hero-wordmark {
+  color: #ff6aa1;
+}
+.dark-panel .hero-tags span {
+  color: #ebbbd0;
+  border-color: #aa5d8170;
+  background: #250d1a55;
+}
+.dark-panel .hero-identity-line {
+  background: linear-gradient(90deg, transparent, #873153, transparent);
+}
+.institutional-note {
+  line-height: 1.65;
+}
+/* Both display themes retain an opaque timer panel for readability. */
+.totem-stage {
+  --totem-bg: #210d1b;
+  --totem-surface: #321629;
+  --totem-muted: #caa8bc;
+  --totem-ink: #fff7fc;
+  grid-template-rows: 15% 34% 18% 27% 6%;
+  background: var(--totem-bg);
+  border-top: 0;
+}
+.totem-stage.theme-light {
+  --totem-bg: #fff9fc;
+  --totem-surface: #f6ebf1;
+  --totem-muted: #84566e;
+  --totem-ink: #472236;
+}
+.totem-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: url("assets/unamad-fondo-oscuro-v2.webp") right center/auto 100%
+    no-repeat;
+  opacity: 0.45;
+}
+.totem-stage.theme-light::before {
+  background-image: url("assets/unamad-fondo-claro-v2.webp");
+  opacity: 0.65;
+}
+.totem-stage.backdrop-solid::before {
+  display: none;
+}
+.totem-top {
+  background: transparent;
+  padding: 2cqw 6.8cqw 0;
+  justify-content: center;
+  gap: 1.5cqw;
+}
+.totem-university-banner {
+  width: 100%;
+  height: auto;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.3cqw;
+  overflow: visible;
+  background: transparent;
+}
+.totem-university-banner .totem-crest {
+  height: 11cqw;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+}
+.totem-wordmark {
+  font-family: Manrope, sans-serif;
+  color: #ff70a6;
+  font-size: 8.5cqw;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+.theme-light .totem-wordmark {
+  color: #d60050;
+}
+.totem-wordmark span {
+  font-family: "DM Sans", sans-serif;
+  display: block;
+  color: var(--totem-muted);
+  font-size: 1.8cqw;
+  letter-spacing: 0.01em;
+  font-weight: 500;
+  line-height: 1.35;
+  margin-top: 1.2cqw;
+}
+.totem-event-ribbon {
+  height: auto;
+  min-height: 4.2cqw;
+  padding: 1cqw 2cqw;
+  border-top: 1px solid var(--totem-line);
+  border-bottom: 1px solid var(--totem-line);
+  background: transparent;
+  flex-shrink: 0;
+}
+.totem-event {
+  font-size: 1.65cqw;
+  letter-spacing: 0.12em;
+  color: var(--totem-ink);
+  line-height: 1.4;
+}
+.totem-art {
+  margin: 3.5% 7% 0;
+  background: color-mix(in srgb, var(--totem-surface) 95%, transparent);
+  border: 1px solid var(--totem-line);
+  border-radius: 1cqw;
+}
+.totem-art-edge {
+  height: 0.5cqw;
+}
+.totem-pattern {
+  opacity: 0.7;
+}
+.totem-clock-block {
+  margin: 2% 7% 2%;
+  padding: 1% 4%;
+  background: #210d1bef;
+  border: 1px solid #ba719244;
+  border-radius: 1.7cqw;
+  box-shadow: 0 0.4cqw 2cqw #00000008;
+}
+.theme-light .totem-clock-block {
+  background: #fffbfdef;
+  border-color: #a6588035;
+}
+.totem-stage.expired .totem-clock-block {
+  background: #421326;
+  border: 1px solid #f2808355;
+}
+.totem-stage.theme-light.expired .totem-clock-block {
+  background: #fff0f2;
+  border-color: #df596455;
+}
+.totem-stage.warning .totem-clock-block {
+  background: #382518;
+  border: 1px solid #b7905855;
+}
+.totem-stage.theme-light.warning .totem-clock-block {
+  background: #fff8e9;
+  border-color: #d0a04755;
+}
+.totem-time-caption {
+  font-size: 1.7cqw;
+}
+.totem-time {
+  line-height: 1.2;
+}
+.totem-state {
+  font-size: 1.9cqw;
+}
+.totem-track {
+  margin-top: 3cqw;
+}
+.totem-footer {
+  margin: 0 7%;
+  padding: 0;
+  background: none;
+  border-top: 1px solid var(--totem-line);
+  color: var(--totem-muted);
+}
+.totem-footer:before {
+  display: none;
+}
+.totem-footer span:first-child {
+  color: var(--totem-ink);
+  font-size: 1.65cqw;
+}
+.totem-footer span:last-child {
+  font-size: 1.22cqw;
+}
+.totem-stage.layout-flyer {
+  grid-template-rows: 15% 45% 9% 25% 6%;
+  background: var(--totem-bg);
+}
+.layout-flyer .totem-art {
+  background: color-mix(in srgb, var(--totem-bg) 93%, transparent);
+  margin-top: 3%;
+}
+.totem-stage.layout-minimal {
+  grid-template-rows: 15% 0 29% 50% 6%;
+  background: var(--totem-bg);
+}
+.layout-minimal .totem-clock-block {
+  background: #210d1be8;
+}
+.layout-minimal.theme-light .totem-clock-block {
+  background: #fffbfde8;
+}
+.layout-minimal .totem-time {
+  font-size: 25cqw;
+}
+.layout-minimal .totem-time-caption {
+  font-size: 2cqw;
+}
+.layout-minimal .totem-state {
+  font-size: 2.2cqw;
+}
+.totem-stage.layout-minimal.warning .totem-clock-block {
+  background: #382518;
+}
+.totem-stage.layout-minimal.theme-light.warning .totem-clock-block {
+  background: #fff8e9;
+}
+.totem-stage.layout-minimal.expired .totem-clock-block {
+  background: #421326;
+}
+.totem-stage.layout-minimal.theme-light.expired .totem-clock-block {
+  background: #fff0f2;
+}
+.totem-stage .totem-name {
+  color: var(--totem-ink);
+}
+@media (max-width: 1100px) {
+  .institutional-hero-copy {
+    padding: 27px;
+    width: 55%;
+  }
+  .institutional-hero-visual {
+    width: 45%;
+    padding-right: 6%;
+  }
+  .hero-wordmark {
+    font-size: 32px;
+  }
+  .institutional-hero-visual .hero-crest {
+    height: 67px;
+  }
+  .hero-identity {
+    gap: 10px;
+  }
+  .hero-wordmark span {
+    font-size: 8.5px;
+  }
+  .brand-program {
+    font-size: 9px;
+  }
+  .header-right {
+    gap: 12px;
+  }
+}
+@media (max-width: 800px) {
+  .brand-program,
+  .brand-separator {
+    display: none;
+  }
+  .official-logo-plate img {
+    width: 160px;
+  }
+  .institutional-hero-copy {
+    padding: 23px;
+    width: 54%;
+  }
+  .institutional-hero-visual {
+    width: 46%;
+    padding-left: 8px;
+  }
+  .hero-wordmark {
+    font-size: 27px;
+  }
+  .hero-wordmark span {
+    font-size: 7.5px;
+  }
+  .institutional-hero-visual .hero-crest {
+    height: 59px;
+  }
+  .hero-location {
+    font-size: 6px;
+    letter-spacing: 0.8px;
+  }
+  .institutional-hero h1 {
+    font-size: 26px;
+  }
+}
+@media (max-width: 600px) {
+  .official-logo-plate {
+    padding: 6px 8px;
+  }
+  .official-logo-plate img {
+    width: 143px;
+  }
+  header .brand {
+    gap: 0;
+  }
+  .institutional-hero {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background-position: center right;
+  }
+  .institutional-hero-copy {
+    width: 100%;
+    padding: 26px 28px 18px;
+  }
+  .institutional-hero-visual {
+    width: 100%;
+    padding: 8px 30px 25px;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .hero-identity-line,
+  .hero-location {
+    display: none;
+  }
+  .hero-wordmark {
+    font-size: 26px;
+  }
+  .hero-wordmark span {
+    font-size: 7px;
+  }
+  .institutional-hero-visual .hero-crest {
+    height: 50px;
+  }
+  .hero-eyebrow {
+    font-size: 8px;
+  }
+  .institutional-hero h1 {
+    font-size: 29px;
+  }
+  .hero-tags span {
+    font-size: 7px;
+  }
+  .hero-tags {
+    margin-top: 15px;
+  }
+  .institutional-hero p {
+    font-size: 11px;
+  }
+}

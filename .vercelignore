@@ -1,0 +1,10 @@
+tests/
+docs/
+.env.local
+.env
+node_modules/
+# Originales en PNG: el sitio usa las versiones WebP.
+public/assets/unamad-fondo-claro-v2.png
+public/assets/unamad-fondo-oscuro-v2.png
+# Sin uso en la interfaz.
+public/assets/unamad-institucional.png
