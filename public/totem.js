@@ -15,7 +15,7 @@
       role:
         typeof d.role === "string"
           ? d.role.slice(0, 70)
-          : "Postulante al Rectorado",
+          : "",
       label:
         typeof d.label === "string"
           ? d.label.slice(0, 35)

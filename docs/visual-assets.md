@@ -1,4 +1,4 @@
-# Recursos visuales · Debate al Rectorado UNAMAD
+# Recursos visuales · Debate UNAMAD
 
 Se integraron marcas separadas, tipografía HTML y fondos decorativos independientes. La imagen de referencia original ya no se usa como cabecera compuesta.
 

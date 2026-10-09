@@ -366,9 +366,10 @@
 .overview-brand strong {
   display: block;
   font-size: 3.6vh;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.03em;
   color: #ff70a6;
-  line-height: 1;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
 }
 .overview-brand span {
   display: block;

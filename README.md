@@ -1,4 +1,4 @@
-# Debate al Rectorado · UNAMAD
+# Debate UNAMAD · Universidad Nacional Amazónica de Madre de Dios
 
 Sistema para moderar los tiempos de un debate: un panel protegido para el moderador y, según el evento, un tótem vertical por candidato o **una sola pantalla** para el público y otra para los candidatos. También tiene una vista general para el proyector o la transmisión. Todo se sincroniza por Internet a través de **Vercel + PostgreSQL en Neon**. Está hecho con HTML, CSS y JavaScript, y una API en Node.js; no requiere frameworks.
 

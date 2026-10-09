@@ -393,3 +393,24 @@ test("Public and speaker screens report their own presence", async () => {
   assert.ok(seen.some((p) => p.screen === 98));
   assert.ok(seen.some((p) => p.screen === 97));
 });
+test("Old default texts are replaced by the UNAMAD branding", () => {
+  const s = normalizeState({
+    event: "Debate al Rectorado · UNAMAD",
+    candidates: [
+      {
+        id: 1,
+        name: "A",
+        duration: 1000,
+        remaining: 1000,
+        running: false,
+        deadline: null,
+        design: { role: "Postulante al Rectorado", theme: "light" },
+      },
+    ],
+  });
+  assert.equal(s.event, "Debate UNAMAD");
+  assert.equal(s.candidates[0].design.role, "");
+  assert.equal(s.candidates[0].design.theme, "light");
+  assert.equal(normalizeState({ event: "Mi debate" }).event, "Mi debate");
+  assert.equal(defaultState().event, "Debate UNAMAD");
+});
