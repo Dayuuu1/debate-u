@@ -925,7 +925,7 @@
     #1b0a17;
 }
 .speaker-standby-crest {
-  height: 42vh;
+  height: 62vh;
   width: auto;
   filter: drop-shadow(0 2vh 6vh #0006);
 }
@@ -1100,7 +1100,7 @@
   padding: 10cqw 8cqw 16cqw;
 }
 .standby-crest {
-  width: 44cqw;
+  width: 62cqw;
   height: auto;
   filter: drop-shadow(0 2cqw 6cqw #0006);
 }
@@ -1180,7 +1180,7 @@
   visibility: hidden;
 }
 .public-empty .public-empty-crest {
-  height: 42vh;
+  height: 62vh;
   width: auto;
   filter: drop-shadow(0 2vh 6vh #0006);
 }
