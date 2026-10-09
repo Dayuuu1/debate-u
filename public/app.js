@@ -56,12 +56,16 @@ const onStage = () =>
   state.candidates[(state.stage ?? 0) - 1] ||
   null;
 const singleMode = () => state.mode === "single";
+// Quien aparece en la pantalla del público y en la de los candidatos (null = fondo).
+const screenCandidate = () =>
+  state.candidates.find((c) => c.running) ||
+  (standbyOn() ? null : state.candidates[(state.stage ?? 0) - 1] || null);
 // Fondo de espera en los tótems: aparece tras unos segundos sin nadie hablando,
 // para no parpadear en pausas breves. Al abrir la pantalla se muestra de inmediato.
 const STANDBY_DELAY = 4000;
 let idleSince = 0;
 function standbyOn() {
-  if (state.candidates.some((c) => c.running)) {
+  if (state.candidates.some((c) => c.running) || state.spotlight) {
     idleSince = null;
     return false;
   }
@@ -869,11 +873,11 @@ function renderSpeaker() {
   document.body.classList.add("display-body", "speaker-body");
   document.title = "Pantalla de los candidatos — Debate UNAMAD";
   $("app").innerHTML =
-    `<section class="speaker-screen" id="speaker"><div class="speaker-top"><span id="spk-round"></span><span id="spk-event"></span></div><div class="speaker-main"><h1 id="spk-name"></h1><div class="speaker-time" id="spk-time"></div><div class="speaker-status" id="spk-status"></div></div><div class="speaker-track"><div id="spk-progress"></div></div>${screenTools}</section>`;
+    `<section class="speaker-screen" id="speaker"><div class="speaker-top"><span id="spk-round"></span><span id="spk-event"></span></div><div class="speaker-main"><h1 id="spk-name"></h1><div class="speaker-time" id="spk-time"></div><div class="speaker-status" id="spk-status"></div></div><div class="speaker-track"><div id="spk-progress"></div></div><div class="speaker-standby" id="spk-standby" hidden><img class="speaker-standby-crest" src="assets/unamad-escudo-oficial.png" alt="Escudo de la UNAMAD"><img class="speaker-standby-image" id="spk-standby-image" alt="" hidden></div>${screenTools}</section>`;
   setupScreen($("speaker"));
 }
 function paintPublic() {
-  const c = onStage(),
+  const c = screenCandidate(),
     round = activeRound();
   setText("pub-event", state.event);
   setText("pub-round", round ? round.name : "Tiempo libre");
@@ -914,11 +918,18 @@ function paintPublic() {
   connectionLabel();
 }
 function paintSpeaker() {
-  const c = onStage(),
+  const c = screenCandidate(),
     round = activeRound();
   setText("spk-event", state.event);
   setText("spk-round", round ? round.name : "Tiempo libre");
-  $("speaker").className = "speaker-screen " + (c ? mood(c) : "idle");
+  $("speaker").className = "speaker-screen " + (c ? mood(c) : "standby");
+  $("spk-standby").hidden = !!c;
+  showAsset(
+    $("spk-standby"),
+    $("spk-standby-image"),
+    c ? "" : state.standby.horizontal || "",
+    "Fondo de espera",
+  );
   setText("spk-name", c ? c.name : "En espera del siguiente orador");
   setText("spk-time", c ? format(remaining(c)) : "");
   setText("spk-status", c ? status(c, true) : "");
@@ -1115,15 +1126,11 @@ function paintPanel() {
     "live-status",
     (active ? "● Turno de " + active.name : "● Ningún turno activo") +
       (round ? " · " + round.name : "") +
-      (active
+      (active || state.spotlight || !state.standby.enabled
         ? ""
         : single
-          ? staged
-            ? ""
-            : " · fondo en la pantalla del público"
-          : state.standby.enabled
-            ? " · tótems con fondo de espera"
-            : ""),
+          ? " · pantallas con fondo de espera"
+          : " · tótems con fondo de espera"),
   );
   $("live-status").classList.toggle("live-note", Boolean(active));
   document
@@ -1159,10 +1166,12 @@ const seenRecently = (screen) => {
 };
 function paintStageBar(c, round) {
   setText("stage-name", c ? c.name : "Nadie en pantalla");
+  const onScreens = c && (c.running || state.spotlight || !state.standby.enabled);
   setText(
     "stage-status",
     c
-      ? status(c) + (round ? " · " + round.name : "")
+      ? (onScreens ? status(c) : "EN PAUSA · LAS PANTALLAS MUESTRAN EL FONDO") +
+          (round ? " · " + round.name : "")
       : "Elige a quién presentar",
   );
   setText("stage-time", c ? format(remaining(c)) : "--:--");

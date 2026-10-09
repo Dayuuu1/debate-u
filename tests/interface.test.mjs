@@ -218,7 +218,7 @@ test("Single-screen panel presents a candidate and starts the timer from the sta
   assert.equal(doc.getElementById("share-links").textContent, "Enlaces de pantallas");
 });
 test("Public and speaker screens show the presented candidate", async () => {
-  const staged = { ...singleState(), stage: 2 };
+  const staged = { ...singleState(), stage: 2, spotlight: true };
   const pub = (await page("?vista=publico", staged)).window.document;
   assert.equal(pub.getElementById("pub-name").textContent, "Candidato 2");
   assert.equal(pub.getElementById("pub-time").textContent, "02:00");
@@ -231,6 +231,13 @@ test("Public and speaker screens show the presented candidate", async () => {
   assert.equal(empty.getElementById("pub-body").hidden, true);
   assert.equal(empty.getElementById("pub-empty").hidden, false);
   assert.equal(empty.querySelectorAll(".candidate-card").length, 0);
+  // Presentado pero ya pausado (sin «spotlight»): ambas pantallas muestran el fondo.
+  const paused = { ...singleState(), stage: 2, spotlight: false };
+  const pubPaused = (await page("?vista=publico", paused)).window.document;
+  assert.equal(pubPaused.getElementById("pub-empty").hidden, false);
+  const spkPaused = (await page("?vista=orador", paused)).window.document;
+  assert.equal(spkPaused.getElementById("spk-standby").hidden, false);
+  assert.equal(spk.getElementById("spk-standby").hidden, true);
 });
 test("Totems show the standby background while nobody is speaking", async () => {
   const idle = (await page("?pantalla=1")).window.document;
@@ -259,7 +266,7 @@ test("Moderator turns the standby background off and shows it on the public scre
   );
   assert.match(
     doc.getElementById("live-status").textContent,
-    /fondo en la pantalla del público/,
+    /pantallas con fondo de espera/,
   );
   doc.getElementById("open-standby").onclick();
   assert.ok(doc.getElementById("standby-dialog").hasAttribute("open"));

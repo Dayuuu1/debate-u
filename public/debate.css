@@ -913,6 +913,29 @@
   background: #2e2209;
   --spk: #ffcd68;
 }
+.speaker-standby {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(90deg, #1b0a17 30%, #1b0a17cc 70%, #1b0a1755),
+    url("assets/unamad-fondo-oscuro-v2.webp") right center / cover no-repeat,
+    #1b0a17;
+}
+.speaker-standby-crest {
+  height: 42vh;
+  width: auto;
+  filter: drop-shadow(0 2vh 6vh #0006);
+}
+.speaker-standby-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 .speaker-screen.expired {
   background: #3a0b14;
   --spk: #ff8a83;

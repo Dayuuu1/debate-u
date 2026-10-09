@@ -503,3 +503,18 @@ test("Standby images must exist and survive the image cleanup", async () => {
   assert.equal(await db.imageExists(kept), true);
   assert.equal(await db.imageExists(unused), false);
 });
+test("Presenting shows a candidate; pausing the turn returns the screens to standby", () => {
+  let s = reduceCommand(defaultState(), { type: "present", id: 2 }, 0);
+  assert.equal(s.spotlight, true);
+  s = reduceCommand(s, { type: "toggle", id: 2 }, 1000);
+  assert.equal(s.spotlight, true);
+  s = reduceCommand(s, { type: "toggle", id: 2 }, 5000);
+  assert.equal(s.candidates[1].running, false);
+  assert.equal(s.spotlight, false);
+  assert.equal(s.stage, 2);
+  s = reduceCommand(s, { type: "present", id: 1 }, 6000);
+  assert.equal(s.spotlight, true);
+  s = reduceCommand(s, { type: "present", id: null }, 7000);
+  assert.equal(s.spotlight, false);
+  assert.equal(normalizeState({ spotlight: true, stage: null }).spotlight, false);
+});
