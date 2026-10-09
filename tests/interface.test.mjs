@@ -236,15 +236,8 @@ test("Totems show the standby background while nobody is speaking", async () => 
   const idle = (await page("?pantalla=1")).window.document;
   assert.equal(idle.getElementById("standby").hidden, false);
   assert.ok(idle.getElementById("projection").classList.contains("standby-on"));
-  assert.equal(idle.getElementById("standby-event").textContent, "Debate UNAMAD");
-  assert.equal(
-    idle.getElementById("standby-seat").textContent,
-    "TÓTEM 01 · Candidato 1",
-  );
-  assert.equal(
-    idle.getElementById("standby-note").textContent,
-    "El debate comenzará en breve",
-  );
+  assert.ok(idle.querySelector("#standby .standby-crest"));
+  assert.equal(idle.querySelector("#standby .standby-default").textContent, "");
   const running = reduceCommand(defaultState(), { type: "toggle", id: 1 }, Date.now());
   const live = (await page("?pantalla=1", running)).window.document;
   assert.equal(live.getElementById("standby").hidden, true);

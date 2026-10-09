@@ -23,7 +23,7 @@ Sistema para moderar los tiempos de un debate: un panel protegido para el modera
   - Una **pantalla del público** (16:9) con el candidato presentado, su foto y su tiempo.
   - Una **pantalla de los candidatos** con un cronómetro gigante que cambia de verde a ámbar y a rojo.
   - El moderador pulsa **Presentar en pantalla** y luego **▶** para iniciar el conteo.
-- **Fondo de espera:** cuando nadie está hablando, los tótems muestran el fondo institucional (escudo, UNAMAD, universidad, evento y ronda) o la imagen que subas, por ejemplo el afiche del evento. La pantalla del público hace lo mismo cuando no hay nadie presentado.
+- **Fondo de espera:** cuando nadie está hablando, los tótems muestran solo el escudo de la UNAMAD sobre el fondo institucional, o la imagen que subas, por ejemplo el afiche del evento. La pantalla del público hace lo mismo cuando no hay nadie presentado.
 - Cada tótem **recuerda su enlace** 30 días: después de abrirlo una vez, basta con `?pantalla=N`.
 - Evitan que la pantalla se apague, ocultan el cursor y funcionan en modo quiosco.
 - **Vista general 16:9** con todos los candidatos y el orador actual, para el proyector. Tiene una variante con fondo transparente para OBS.
@@ -115,7 +115,7 @@ La vista previa al compartir usa `https://debate-u-nine.vercel.app/assets/og-deb
 
 - Activa o desactiva el fondo de los tótems. Aparece 4 segundos después de que nadie esté hablando y desaparece al iniciar un turno.
 - Opcionalmente, sube una imagen vertical (1080 × 1920) para los tótems y otra horizontal (1920 × 1080) para la pantalla del público.
-- Sin imágenes se usa el fondo institucional de la UNAMAD.
+- Sin imágenes se muestra solo el escudo de la UNAMAD, sin texto.
 
 En pantalla única, el botón **▣ Fondo** de la barra «En pantalla» pausa el turno y muestra el fondo en la pantalla del público.
 

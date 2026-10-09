@@ -68,12 +68,6 @@ function standbyOn() {
   idleSince ??= Date.now();
   return state.standby.enabled && Date.now() - idleSince >= STANDBY_DELAY;
 }
-const debateStarted = () =>
-  state.candidates.some((c) =>
-    Object.values(c.spoken || {}).some((ms) => ms > 0),
-  );
-const waitingText = () =>
-  debateStarted() ? "En breve continuamos" : "El debate comenzará en breve";
 // Carga una imagen guardada en un <img>; holder recuerda cuál está puesta.
 function showAsset(holder, img, asset, alt) {
   if (holder.dataset.asset === asset) return;
@@ -848,7 +842,7 @@ function renderDisplay() {
   }
   document.title = "Tótem " + displayId + " — Debate UNAMAD";
   $("app").innerHTML =
-    `<section class="signage-screen" id="projection">${Totem.stageHTML()}<div class="standby-screen" id="standby" hidden><img class="standby-image" id="standby-image" alt="" hidden><div class="standby-default"><img class="standby-crest" src="assets/unamad-escudo-oficial.png" alt="Escudo de la UNAMAD"><div class="standby-wordmark">UNAMAD<span>Universidad Nacional Amazónica de Madre de Dios</span></div><div class="standby-rule"></div><h1 id="standby-event"></h1><p class="standby-round" id="standby-round"></p><p class="standby-note" id="standby-note"></p><p class="standby-seat" id="standby-seat"></p></div></div><div class="unassigned-note" id="unassigned" hidden><img src="assets/unamad-escudo-oficial.png" alt=""><strong>Tótem ${displayId}</strong><span>Sin candidato asignado</span><small>El moderador puede agregarlo en «Configurar debate».</small></div>${screenTools}</section>`;
+    `<section class="signage-screen" id="projection">${Totem.stageHTML()}<div class="standby-screen" id="standby" hidden><img class="standby-image" id="standby-image" alt="" hidden><div class="standby-default"><img class="standby-crest" src="assets/unamad-escudo-oficial.png" alt="Escudo de la UNAMAD"></div></div><div class="unassigned-note" id="unassigned" hidden><img src="assets/unamad-escudo-oficial.png" alt=""><strong>Tótem ${displayId}</strong><span>Sin candidato asignado</span><small>El moderador puede agregarlo en «Configurar debate».</small></div>${screenTools}</section>`;
   setupScreen($("projection"));
 }
 function renderOverview() {
@@ -868,7 +862,7 @@ function renderPublic() {
   document.body.classList.add("display-body", "overview-body");
   document.title = "Pantalla del público — Debate UNAMAD";
   $("app").innerHTML =
-    `<section class="public-screen" id="public">${brandHead("pub")}<div class="public-body" id="pub-body"><div class="public-photo" id="pub-photo"><img id="pub-image" alt="" hidden><div class="public-placeholder"><svg viewBox="0 0 160 190" fill="none" aria-hidden="true"><circle cx="80" cy="57" r="32" fill="currentColor"/><path d="M15 182v-17a65 65 0 0 1 130 0v17" fill="currentColor"/></svg></div></div><div class="public-info"><span class="public-label" id="pub-label"></span><h1 id="pub-name"></h1><p id="pub-role"></p><div class="public-clock"><span class="public-caption" id="pub-caption"></span><div class="public-time" id="pub-time"></div><div class="public-status"><i></i><span id="pub-status"></span></div><div class="ov-track"><div id="pub-progress"></div></div></div></div></div><div class="public-empty" id="pub-empty" hidden><img class="public-empty-crest" src="assets/unamad-escudo-oficial.png" alt="Escudo de la UNAMAD"><div class="standby-wordmark">UNAMAD<span>Universidad Nacional Amazónica de Madre de Dios</span></div><h1 id="pub-empty-title"></h1><p id="pub-empty-sub"></p></div><img class="public-standby-image" id="pub-standby-image" alt="" hidden>${screenTools}</section>`;
+    `<section class="public-screen" id="public">${brandHead("pub")}<div class="public-body" id="pub-body"><div class="public-photo" id="pub-photo"><img id="pub-image" alt="" hidden><div class="public-placeholder"><svg viewBox="0 0 160 190" fill="none" aria-hidden="true"><circle cx="80" cy="57" r="32" fill="currentColor"/><path d="M15 182v-17a65 65 0 0 1 130 0v17" fill="currentColor"/></svg></div></div><div class="public-info"><span class="public-label" id="pub-label"></span><h1 id="pub-name"></h1><p id="pub-role"></p><div class="public-clock"><span class="public-caption" id="pub-caption"></span><div class="public-time" id="pub-time"></div><div class="public-status"><i></i><span id="pub-status"></span></div><div class="ov-track"><div id="pub-progress"></div></div></div></div></div><div class="public-empty" id="pub-empty" hidden><img class="public-empty-crest" src="assets/unamad-escudo-oficial.png" alt="Escudo de la UNAMAD"></div><img class="public-standby-image" id="pub-standby-image" alt="" hidden>${screenTools}</section>`;
   setupScreen($("public"));
 }
 function renderSpeaker() {
@@ -891,12 +885,8 @@ function paintPublic() {
     c ? "" : state.standby.horizontal || "",
     "Fondo de espera",
   );
+  $("public").classList.toggle("standby", !c);
   if (!c) {
-    setText("pub-empty-title", state.event);
-    setText(
-      "pub-empty-sub",
-      (round ? "Ronda: " + round.name + " · " : "") + waitingText(),
-    );
     connectionLabel();
     return;
   }
@@ -995,16 +985,8 @@ function paintDisplay() {
   connectionLabel();
 }
 function paintStandby(c) {
-  const round = activeRound(),
-    theme = c ? Totem.normalize(c.design, c.id).theme : "dark";
+  const theme = c ? Totem.normalize(c.design, c.id).theme : "dark";
   $("standby").className = "standby-screen theme-" + theme;
-  setText("standby-event", state.event);
-  setText("standby-round", round ? round.name : "");
-  setText("standby-note", waitingText());
-  setText(
-    "standby-seat",
-    "TÓTEM " + two(displayId) + (c ? " · " + c.name : ""),
-  );
   showAsset(
     $("standby"),
     $("standby-image"),

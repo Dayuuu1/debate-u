@@ -1077,8 +1077,9 @@
   padding: 10cqw 8cqw 16cqw;
 }
 .standby-crest {
-  width: 20cqw;
+  width: 44cqw;
   height: auto;
+  filter: drop-shadow(0 2cqw 6cqw #0006);
 }
 .standby-wordmark {
   font-family: Manrope, sans-serif;
@@ -1151,6 +1152,14 @@
 }
 .theme-light .standby-seat {
   color: #9b7283;
+}
+.public-screen.standby .overview-head {
+  visibility: hidden;
+}
+.public-empty .public-empty-crest {
+  height: 42vh;
+  width: auto;
+  filter: drop-shadow(0 2vh 6vh #0006);
 }
 .public-standby-image {
   position: absolute;
