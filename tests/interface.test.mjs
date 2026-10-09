@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 import { parseHTML } from "linkedom";
 import { defaultState, reduceCommand } from "../lib/state.mjs";
 const flush = () => new Promise((r) => setImmediate(r));
-async function page(search = "") {
+async function page(search = "", initial = defaultState()) {
   const { window } = parseHTML(
     await readFile(new URL("../public/index.html", import.meta.url), "utf8"),
   );
@@ -33,7 +33,7 @@ async function page(search = "") {
       },
     });
   const storage = new Map();
-  let state = defaultState(),
+  let state = initial,
     stateFn = () => {},
     connectionFn = () => {};
   const cloud = {
@@ -191,4 +191,44 @@ test("Overview screen lists every candidate and the active round", async () => {
   assert.equal(doc.getElementById("ov-round").textContent, "Tiempo libre");
   assert.equal(doc.getElementById("ov-tile-time-2").textContent, "02:00");
   assert.equal(doc.querySelectorAll(".candidate-card").length, 0);
+});
+const singleState = () => ({ ...defaultState(), mode: "single" });
+test("Single-screen panel presents a candidate and starts the timer from the stage bar", async () => {
+  const { window, cloud } = await page("", singleState());
+  const doc = window.document;
+  assert.equal(doc.getElementById("stage-bar").hidden, false);
+  assert.equal(doc.querySelectorAll("[data-present]").length, 3);
+  assert.equal(doc.querySelectorAll("[data-open]").length, 0);
+  assert.equal(doc.getElementById("stage-name").textContent, "Nadie en pantalla");
+  doc.querySelector('[data-present-chip="2"]').onclick();
+  await flush();
+  assert.equal(cloud.state.stage, 2);
+  assert.equal(doc.getElementById("stage-name").textContent, "Candidato 2");
+  assert.ok(doc.getElementById("card-2").classList.contains("on-stage"));
+  assert.match(doc.getElementById("present-label-2").textContent, /En pantalla/);
+  doc.getElementById("stage-play").onclick();
+  await flush();
+  assert.equal(cloud.state.candidates[1].running, true);
+  assert.match(doc.getElementById("stage-play").textContent, /Pausar/);
+  doc.getElementById("stage-next").onclick();
+  await flush();
+  assert.equal(cloud.state.stage, 3);
+  assert.equal(cloud.state.candidates[2].running, true);
+  assert.equal(cloud.state.candidates[1].running, false);
+  assert.equal(doc.getElementById("share-links").textContent, "Enlaces de pantallas");
+});
+test("Public and speaker screens show the presented candidate", async () => {
+  const staged = { ...singleState(), stage: 2 };
+  const pub = (await page("?vista=publico", staged)).window.document;
+  assert.equal(pub.getElementById("pub-name").textContent, "Candidato 2");
+  assert.equal(pub.getElementById("pub-time").textContent, "02:00");
+  assert.equal(pub.getElementById("pub-status").textContent, "LISTO PARA INICIAR");
+  assert.equal(pub.getElementById("pub-empty").hidden, true);
+  const spk = (await page("?vista=orador", staged)).window.document;
+  assert.equal(spk.getElementById("spk-name").textContent, "Candidato 2");
+  assert.equal(spk.getElementById("spk-time").textContent, "02:00");
+  const empty = (await page("?vista=publico", singleState())).window.document;
+  assert.equal(empty.getElementById("pub-body").hidden, true);
+  assert.equal(empty.getElementById("pub-empty").hidden, false);
+  assert.equal(empty.querySelectorAll(".candidate-card").length, 0);
 });

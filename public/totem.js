@@ -153,5 +153,5 @@
       stage.classList.add("has-image");
     }
   }
-  root.Totem = { normalize, stageHTML, paintStage, putImage };
+  root.Totem = { normalize, stageHTML, paintStage, putImage, getImage };
 })(typeof module !== "undefined" ? module.exports : window);

@@ -332,3 +332,64 @@ test("Overview links are read-only and extra totems report presence", async () =
   assert.ok(again.data.presence.some((p) => p.screen === 99));
   assert.equal(verifyToken(signToken({ role: "display", screen: 9 }, 1000)), null);
 });
+test("Single-screen mode: present a candidate, start it and keep it on stage", () => {
+  let s = reduceCommand(defaultState(), { type: "toggle", id: 1 }, 1000);
+  assert.equal(s.stage, 1);
+  s = reduceCommand(s, { type: "present", id: 3 }, 11000);
+  assert.equal(s.stage, 3);
+  assert.equal(s.candidates[0].running, false);
+  assert.equal(s.candidates[0].remaining, 110000);
+  assert.equal(s.candidates[2].running, false);
+  s = reduceCommand(s, { type: "toggle", id: 3 }, 12000);
+  assert.equal(s.candidates[2].running, true);
+  assert.equal(s.stage, 3);
+  s = reduceCommand(
+    s,
+    {
+      type: "settings",
+      event: "Debate",
+      warning: 30,
+      overtime: true,
+      mode: "single",
+      candidates: [
+        { id: 3, name: "Tercero", duration: 60000 },
+        { id: 1, name: "Primero", duration: 60000 },
+      ],
+    },
+    20000,
+  );
+  assert.equal(s.mode, "single");
+  assert.equal(s.stage, 1);
+  assert.equal(s.candidates[0].name, "Tercero");
+  assert.throws(() =>
+    reduceCommand(
+      s,
+      {
+        type: "settings",
+        event: "Debate",
+        warning: 30,
+        overtime: true,
+        mode: "otro",
+        candidates: [{ name: "A", duration: 60000 }],
+      },
+      0,
+    ),
+  );
+  assert.throws(() => reduceCommand(s, { type: "present", id: 9 }, 0));
+  assert.equal(reduceCommand(s, { type: "present", id: null }, 0).stage, null);
+  assert.equal(normalizeState({ mode: "x", stage: 7 }).mode, "totems");
+  assert.equal(normalizeState({ mode: "single", stage: 7 }).stage, null);
+});
+test("Public and speaker screens report their own presence", async () => {
+  const token = signToken({ role: "overview" }, 60000);
+  for (const view of ["publico", "orador", "__proto__"])
+    assert.equal(
+      (await api("state&view=" + view, { auth: null, bearer: token })).response
+        .status,
+      200,
+    );
+  const seen = (await api("state&view=publico", { auth: null, bearer: token }))
+    .data.presence;
+  assert.ok(seen.some((p) => p.screen === 98));
+  assert.ok(seen.some((p) => p.screen === 97));
+});

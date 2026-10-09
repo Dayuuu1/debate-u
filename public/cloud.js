@@ -1,12 +1,13 @@
 "use strict";
 window.Cloud = (() => {
   const params = new URLSearchParams(location.search),
-    view =
-      params.get("vista") === "general"
-        ? "overview"
-        : params.has("pantalla")
-          ? "display"
-          : "admin",
+    vista = params.get("vista"),
+    // general, publico y orador comparten el enlace de solo lectura "overview".
+    view = ["general", "publico", "orador"].includes(vista)
+      ? "overview"
+      : params.has("pantalla")
+        ? "display"
+        : "admin",
     screen = view === "display" ? Number(params.get("pantalla")) || 0 : 0,
     key =
       view === "overview"
@@ -61,6 +62,7 @@ window.Cloud = (() => {
     onConnection = () => {},
     links = [],
     overviewLink = null,
+    overviewToken = null,
     delay = FAST,
     resting = false,
     lastActivity = Date.now();
@@ -76,7 +78,13 @@ window.Cloud = (() => {
       const r = await fetch(
         "/api/debate?op=" +
           op +
-          (op === "state" && screen ? "&screen=" + screen : ""),
+          (op !== "state"
+            ? ""
+            : screen
+              ? "&screen=" + screen
+              : view === "overview"
+                ? "&view=" + vista
+                : ""),
         {
           credentials: "same-origin",
           cache: "no-store",
@@ -196,8 +204,15 @@ window.Cloud = (() => {
       screen: x.screen,
       url: shareURL({ pantalla: x.screen }, x.token),
     }));
+    overviewToken = data.overview;
     overviewLink = shareURL({ vista: "general" }, data.overview);
     return links;
+  }
+  // Enlaces de las pantallas compartidas: general, publico u orador.
+  function screenLink(name, extra = {}) {
+    return overviewToken
+      ? shareURL({ vista: name, ...extra }, overviewToken)
+      : null;
   }
   function link(id) {
     return links.find((x) => x.screen === id)?.url;
@@ -314,6 +329,7 @@ window.Cloud = (() => {
     image,
     getLinks,
     link,
+    screenLink,
     logout,
     now: () => Date.now() + offset,
     setCallbacks: (stateFn, connectionFn) => {

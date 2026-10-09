@@ -65,7 +65,7 @@
       <div class="dialog-head">
         <div>
           <span class="eyebrow">GUÍA DE CONEXIÓN</span>
-          <h2>Un tótem por candidato.</h2>
+          <h2>Tótems o pantalla única.</h2>
         </div>
         <button class="icon-btn" data-close="help" aria-label="Cerrar">
           ✕
@@ -75,8 +75,9 @@
         <li>
           <strong>Prepara el debate.</strong>
           <p>
-            En «Configurar debate» agrega hasta 8 candidatos, define las rondas
-            y su duración. Personaliza la foto y el diseño de cada tótem.
+            En «Configurar debate» elige el modo: un tótem por candidato, o
+            pantalla única (una para el público y otra para los candidatos).
+            Agrega hasta 8 candidatos y define las rondas.
           </p>
         </li>
         <li>
@@ -102,7 +103,8 @@
           <strong>Controla los turnos.</strong>
           <p>
             Elige la ronda, inicia el turno y usa «Siguiente orador» (tecla →)
-            para pasar la palabra. Con este panel abierto, las pantallas se
+            para pasar la palabra. En pantalla única, pulsa «Presentar en
+            pantalla» para mostrar al candidato y ▶ para iniciar su tiempo. Con este panel abierto, las pantallas se
             sincronizan cada segundo. Abre el panel unos minutos antes: cada
             tótem está listo cuando su tarjeta indica «● Conectado».
           </p>
@@ -135,6 +137,25 @@
         <label class="field"
           >Nombre del evento<input id="event-name" maxlength="80" required
         /></label>
+        <div class="section-label">PANTALLAS</div>
+        <div class="mode-options">
+          <label class="mode-choice"
+            ><input type="radio" name="screen-mode" value="totems" /><span
+              ><strong>Un tótem por candidato</strong
+              ><small
+                >Cada candidato tiene su propia pantalla vertical.</small
+              ></span
+            ></label
+          ><label class="mode-choice"
+            ><input type="radio" name="screen-mode" value="single" /><span
+              ><strong>Pantalla única</strong
+              ><small
+                >Una pantalla para el público y otra para los candidatos. Tú
+                presentas a cada uno y pulsas ▶ para iniciar.</small
+              ></span
+            ></label
+          >
+        </div>
         <div class="section-label">
           PARTICIPANTES <span id="candidate-count"></span>
         </div>
@@ -399,13 +420,13 @@
     <div id="toast" role="status"></div>
     <dialog id="screen-links">
       <div class="dialog-head">
-        <h2>Enlaces para los tótems</h2>
+        <h2 id="links-title">Enlaces para los tótems</h2>
         <button class="icon-btn" data-close="screen-links" aria-label="Cerrar">
           ✕
         </button>
       </div>
       <p class="small muted">
-        Abre cada enlace completo una vez en el navegador de su tótem; ese
+        Abre cada enlace completo una vez en el navegador de su pantalla; ese
         equipo lo recordará 30 días. Los enlaces permiten visualizar, no
         controlar.
       </p>

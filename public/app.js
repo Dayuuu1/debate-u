@@ -1,8 +1,12 @@
 "use strict";
 const { format, elapsed, FREE_ROUND } = TimerCore;
 const params = new URLSearchParams(location.search);
-const isOverview = params.get("vista") === "general";
-const isDisplay = !isOverview && params.has("pantalla");
+const vista = params.get("vista");
+const isOverview = vista === "general",
+  isPublic = vista === "publico",
+  isSpeaker = vista === "orador",
+  isScreen = isOverview || isPublic || isSpeaker;
+const isDisplay = !isScreen && params.has("pantalla");
 const displayId = Number(params.get("pantalla"));
 const MAX_CANDIDATES = 8,
   MAX_ROUNDS = 10;
@@ -33,7 +37,6 @@ let state = null;
 let audioCtx,
   toastTimeout,
   pendingConfirm,
-  lastSpeaker = 0,
   wakeLock = null;
 let designCandidate = 1,
   designDraft = null,
@@ -47,6 +50,14 @@ let settingsDraft = null,
 const remaining = (c) => TimerCore.remaining(c, Cloud.now(), state.overtime);
 const activeRound = () =>
   state.rounds.find((r) => r.id === state.round) || null;
+// En las pantallas compartidas aparece quien habla o, si nadie habla, el presentado.
+const onStage = () =>
+  state.candidates.find((c) => c.running) ||
+  state.candidates[(state.stage ?? 0) - 1] ||
+  null;
+const singleMode = () => state.mode === "single";
+const cardsSignature = () => state.candidates.length + ":" + state.mode;
+const layoutName = { portrait: "Foto", flyer: "Flyer", minimal: "Solo tiempo" };
 function toast(message) {
   $("toast").textContent = message;
   $("toast").classList.add("show");
@@ -168,13 +179,13 @@ document
 function toggle(id) {
   const c = state.candidates[id - 1];
   if (!c) return;
-  if (!c.running) lastSpeaker = id;
   unlockAudio();
   send({ type: "toggle", id });
 }
 function nextSpeaker() {
   const count = state.candidates.length;
-  const current = state.candidates.find((c) => c.running)?.id ?? lastSpeaker;
+  const current =
+    state.candidates.find((c) => c.running)?.id ?? state.stage ?? 0;
   toggle((current % count) + 1);
 }
 async function pauseAll() {
@@ -247,6 +258,14 @@ function openScreen(id) {
   if (!win) toast("Permite las ventanas emergentes para abrir el tótem.");
   else win.focus();
 }
+function present(id) {
+  const c = state.candidates[id - 1];
+  if (!c || onStage()?.id === id) return;
+  send({ type: "present", id }).then(
+    (ok) =>
+      ok && toast(`${c.name} está en pantalla. Pulsa ▶ para iniciar su tiempo.`),
+  );
+}
 function linkRow(key, title, url, hint, attr = "") {
   return `<div class="link-row" ${attr}><label>${escapeHTML(title)}<input id="share-link-${key}" readonly value="${escapeHTML(url)}"></label><div class="link-actions"><button class="secondary" data-copy-link="${key}">Copiar enlace</button><span>${escapeHTML(hint)}</span></div></div>`;
 }
@@ -254,7 +273,32 @@ async function showLinks() {
   try {
     await Cloud.getLinks();
     const origin = location.origin;
-    let html = state.candidates
+    const screenRows = [
+      [
+        "publico",
+        "Pantalla del público (16:9) · candidato presentado con su foto",
+        "?vista=publico",
+      ],
+      [
+        "orador",
+        "Pantalla de los candidatos · tiempo grande para quien habla",
+        "?vista=orador",
+      ],
+    ]
+      .map(([key, title, short]) => {
+        const url = Cloud.screenLink?.(key);
+        return url
+          ? linkRow(
+              key,
+              title,
+              url,
+              `Después, en ese equipo: ${origin}/${short}`,
+              `data-link-view="${key}"`,
+            )
+          : "";
+      })
+      .join("");
+    const totemRows = state.candidates
       .map((c) =>
         linkRow(
           "s" + c.id,
@@ -265,6 +309,17 @@ async function showLinks() {
         ),
       )
       .join("");
+    let html = singleMode()
+      ? screenRows &&
+        '<div class="section-label">PANTALLAS DEL DEBATE</div>' + screenRows
+      : totemRows +
+        (screenRows &&
+          '<div class="section-label">PANTALLA ÚNICA (OPCIONAL)</div>' +
+            screenRows);
+    setText(
+      "links-title",
+      singleMode() ? "Enlaces de las pantallas" : "Enlaces para los tótems",
+    );
     if (Cloud.overviewLink) {
       const obs = new URL(Cloud.overviewLink);
       obs.searchParams.set("fondo", "transparente");
@@ -370,6 +425,9 @@ function setupForm() {
   $("event-name").value = state.event;
   $("warning-seconds").value = state.warning;
   $("overtime-enabled").checked = state.overtime;
+  document
+    .querySelectorAll('[name="screen-mode"]')
+    .forEach((r) => (r.checked = r.value === state.mode));
   settingsDraft = {
     candidates: state.candidates.map((c) => ({
       id: c.id,
@@ -389,6 +447,9 @@ $("settings-form").onsubmit = async (e) => {
     event: $("event-name").value.trim() || "Debate al Rectorado · UNAMAD",
     warning: Number($("warning-seconds").value),
     overtime: $("overtime-enabled").checked,
+    mode:
+      document.querySelector('[name="screen-mode"]:checked')?.value ??
+      state.mode,
     candidates: d.candidates.map((c, i) => ({
       ...(c.id ? { id: c.id } : {}),
       name: c.name.trim() || "Candidato " + (i + 1),
@@ -540,11 +601,12 @@ $("clear-report").onclick = () =>
   );
 function cardHTML(c) {
   const id = c.id,
-    n = two(id);
-  return `<article class="candidate-card" id="card-${id}" style="--accent:${Totem.normalize(c.design, id).accent}"><div class="card-heading"><div class="avatar" id="avatar-${id}">${n}</div><div><div class="candidate-label">CANDIDATO ${n}</div><h2 class="candidate-name" id="name-${id}"></h2></div><span class="screen-badge">T${id} ↗</span></div><div class="timer-box"><div class="timer-status"><i></i><span id="status-${id}"></span></div><div class="timer" id="time-${id}" aria-label="Tiempo restante"></div><div class="track"><div class="track-fill" id="progress-${id}"></div></div><div class="assigned"><span id="remaining-label-${id}">TIEMPO RESTANTE</span><span id="assigned-${id}"></span></div></div><div class="controls"><div class="main-controls"><button class="primary" id="toggle-${id}" data-toggle="${id}">▶ &nbsp; Iniciar turno</button><button class="icon-btn" data-reset="${id}" aria-label="Reiniciar candidato ${id}" title="Reiniciar cronómetro">↺</button></div><div class="adjust-controls"><button data-adjust="${id}" data-ms="-15000" aria-label="Restar 15 segundos al candidato ${id}">−15 s</button><button data-adjust="${id}" data-ms="15000" aria-label="Agregar 15 segundos al candidato ${id}">+15 s</button><button data-adjust="${id}" data-ms="30000" aria-label="Agregar 30 segundos al candidato ${id}">+30 s</button></div></div><button class="totem-customize" data-design="${id}"><span>✦ &nbsp; Personalizar tótem</span><span id="design-badge-${id}">9:16 · Oscuro</span></button><button class="open-screen" data-open="${id}"><span>▣ &nbsp; Abrir tótem ${id}</span><span class="opened" id="screen-status-${id}">↗</span></button></article>`;
+    n = two(id),
+    single = singleMode();
+  return `<article class="candidate-card" id="card-${id}" style="--accent:${Totem.normalize(c.design, id).accent}"><div class="card-heading"><div class="avatar" id="avatar-${id}">${n}</div><div><div class="candidate-label">CANDIDATO ${n}</div><h2 class="candidate-name" id="name-${id}"></h2></div>${single ? "" : `<span class="screen-badge">T${id} ↗</span>`}</div><div class="timer-box"><div class="timer-status"><i></i><span id="status-${id}"></span></div><div class="timer" id="time-${id}" aria-label="Tiempo restante"></div><div class="track"><div class="track-fill" id="progress-${id}"></div></div><div class="assigned"><span id="remaining-label-${id}">TIEMPO RESTANTE</span><span id="assigned-${id}"></span></div></div><div class="controls"><div class="main-controls"><button class="primary" id="toggle-${id}" data-toggle="${id}">▶ &nbsp; Iniciar turno</button><button class="icon-btn" data-reset="${id}" aria-label="Reiniciar candidato ${id}" title="Reiniciar cronómetro">↺</button></div><div class="adjust-controls"><button data-adjust="${id}" data-ms="-15000" aria-label="Restar 15 segundos al candidato ${id}">−15 s</button><button data-adjust="${id}" data-ms="15000" aria-label="Agregar 15 segundos al candidato ${id}">+15 s</button><button data-adjust="${id}" data-ms="30000" aria-label="Agregar 30 segundos al candidato ${id}">+30 s</button></div></div><button class="totem-customize" data-design="${id}"><span>✦ &nbsp; ${single ? "Personalizar imagen" : "Personalizar tótem"}</span><span id="design-badge-${id}"></span></button>${single ? `<button class="open-screen present-btn" data-present="${id}"><span id="present-label-${id}">▣ &nbsp; Presentar en pantalla</span><span class="opened" id="present-state-${id}"></span></button>` : `<button class="open-screen" data-open="${id}"><span>▣ &nbsp; Abrir tótem ${id}</span><span class="opened" id="screen-status-${id}">↗</span></button>`}</article>`;
 }
 function renderCards() {
-  cardsKey = String(state.candidates.length);
+  cardsKey = cardsSignature();
   const cards = $("cards");
   cards.innerHTML = state.candidates.map(cardHTML).join("");
   const each = (selector, fn) =>
@@ -556,6 +618,16 @@ function renderCards() {
   );
   each("[data-design]", (b) => openDesign(Number(b.dataset.design)));
   each("[data-open]", (b) => openScreen(Number(b.dataset.open)));
+  each("[data-present]", (b) => present(Number(b.dataset.present)));
+  $("stage-chips").innerHTML = state.candidates
+    .map(
+      (c) =>
+        `<button class="round-chip" data-present-chip="${c.id}"><b>${two(c.id)}</b><span id="chip-name-${c.id}"></span></button>`,
+    )
+    .join("");
+  $("stage-chips")
+    .querySelectorAll("[data-present-chip]")
+    .forEach((b) => (b.onclick = () => present(Number(b.dataset.presentChip))));
   refreshOwner();
 }
 function renderRounds() {
@@ -575,7 +647,7 @@ function renderRounds() {
 }
 function renderPanel() {
   $("app").innerHTML =
-    `<header><div class="brand"><div class="official-logo-plate"><img src="assets/unamad-logo-oficial.png" alt="UNAMAD · Universidad Nacional Amazónica de Madre de Dios" width="262" height="70"></div><div class="brand-separator"></div><div class="brand-program">DEBATE AL RECTORADO<span>CENTRAL DE MODERACIÓN</span></div></div><div class="header-right"><div class="pill"><span class="dot"></span> Panel del moderador</div><span class="header-clock" id="clock"></span><button class="panel-theme" id="panel-theme" title="Cambiar apariencia del panel">☾ Oscuro</button><button class="header-help" id="help-top">ⓘ &nbsp; Cómo conectar</button></div></header><main><div id="owner-warning" class="owner-warning" hidden><span id="owner-warning-text"></span><button id="take-control" class="secondary">Reintentar</button></div><section class="institutional-hero"><div class="institutional-hero-copy"><span class="hero-eyebrow"><i></i> ENCUENTRO UNIVERSITARIO</span><h1 id="event-title"></h1><p>Ideas para el futuro de nuestra universidad.</p><div class="hero-tags"><span id="hero-count"></span><span>TÓTEMS VERTICALES 9:16</span></div></div><div class="institutional-hero-visual"><div class="hero-identity"><img class="hero-crest" src="assets/unamad-escudo-oficial.png" alt="Escudo de la UNAMAD"><div class="hero-wordmark">UNAMAD<span>Universidad Nacional Amazónica<br>de Madre de Dios</span></div></div><div class="hero-identity-line"></div><span class="hero-location">PUERTO MALDONADO · MADRE DE DIOS</span></div></section><div class="workspace-heading"><div><span class="eyebrow">DIRECCIÓN DEL DEBATE</span><h2>Panel de moderación</h2></div><button class="secondary" id="settings-btn"><span aria-hidden="true">⚙</span> Configurar debate</button></div><div class="cloud-tools"><span class="cloud-state" id="cloud-status">Conectado al debate</span><button class="secondary" id="open-report">Informe de tiempos</button><button class="secondary" id="share-links">Enlaces de tótems</button><button class="secondary" id="logout">Cerrar sesión</button></div><section class="round-bar" aria-label="Rondas del debate"><span class="toolbar-label">Ronda</span><div class="round-chips" id="round-chips"></div><div class="round-actions"><button class="secondary" id="next-round">Siguiente ronda &nbsp;→</button><button class="subtle" id="edit-rounds">Editar rondas</button></div></section><section class="toolbar" aria-label="Controles generales"><div class="toolbar-group"><span class="toolbar-label">Tiempo por intervención</span><div class="presets"><button class="preset" data-preset="60">1 min</button><button class="preset" data-preset="120">2 min</button><button class="preset" data-preset="180">3 min</button><button class="preset" id="custom-time">Personalizar</button></div><span class="divider"></span><label class="sound-label"><input id="sound" type="checkbox"> Aviso sonoro</label></div><div class="toolbar-group"><button class="primary" id="next-speaker" title="Pausa el turno actual e inicia el siguiente (tecla →)">Siguiente orador &nbsp;⏭</button><button class="secondary" id="pause-all">Ⅱ &nbsp; Pausar todos</button><button class="subtle" id="reset-all" title="Reiniciar todos los cronómetros">↺ &nbsp; Reiniciar</button></div></section><div class="status-line"><strong>Participantes <span class="muted-count" id="participant-count"></span></strong><span id="live-status">● &nbsp; Listos para comenzar</span></div><section class="cards" id="cards" aria-label="Cronómetros de los candidatos"></section><section class="bottom-row"><div class="guide-card"><div class="guide-symbol" aria-hidden="true">▣</div><div><h3>Identidad UNAMAD en cada tótem</h3><p>Añade la foto o el flyer de cada candidato y revisa su pantalla antes de proyectar. Para el proyector, usa la vista general.</p><button class="text-btn" id="help-bottom">Ver guía de conexión &nbsp; →</button></div></div><div class="shortcuts"><h3>El control, al alcance de tu teclado</h3><div class="shortcut-row"><span><kbd>1</kbd>…<kbd>8</kbd> Iniciar / pausar candidato</span><span><kbd>Espacio</kbd> Pausar / continuar</span><span><kbd>→</kbd> Siguiente orador</span></div></div></section><footer class="footer"><span><strong>● Un turno activo a la vez.</strong> Al cambiar de candidato, el anterior queda en pausa.</span><span id="footer-note">UNAMAD · Tótems en equipos independientes</span></footer></main>`;
+    `<header><div class="brand"><div class="official-logo-plate"><img src="assets/unamad-logo-oficial.png" alt="UNAMAD · Universidad Nacional Amazónica de Madre de Dios" width="262" height="70"></div><div class="brand-separator"></div><div class="brand-program">DEBATE AL RECTORADO<span>CENTRAL DE MODERACIÓN</span></div></div><div class="header-right"><div class="pill"><span class="dot"></span> Panel del moderador</div><span class="header-clock" id="clock"></span><button class="panel-theme" id="panel-theme" title="Cambiar apariencia del panel">☾ Oscuro</button><button class="header-help" id="help-top">ⓘ &nbsp; Cómo conectar</button></div></header><main><div id="owner-warning" class="owner-warning" hidden><span id="owner-warning-text"></span><button id="take-control" class="secondary">Reintentar</button></div><section class="institutional-hero"><div class="institutional-hero-copy"><span class="hero-eyebrow"><i></i> ENCUENTRO UNIVERSITARIO</span><h1 id="event-title"></h1><p>Ideas para el futuro de nuestra universidad.</p><div class="hero-tags"><span id="hero-count"></span><span id="hero-mode"></span></div></div><div class="institutional-hero-visual"><div class="hero-identity"><img class="hero-crest" src="assets/unamad-escudo-oficial.png" alt="Escudo de la UNAMAD"><div class="hero-wordmark">UNAMAD<span>Universidad Nacional Amazónica<br>de Madre de Dios</span></div></div><div class="hero-identity-line"></div><span class="hero-location">PUERTO MALDONADO · MADRE DE DIOS</span></div></section><div class="workspace-heading"><div><span class="eyebrow">DIRECCIÓN DEL DEBATE</span><h2>Panel de moderación</h2></div><button class="secondary" id="settings-btn"><span aria-hidden="true">⚙</span> Configurar debate</button></div><div class="cloud-tools"><span class="cloud-state" id="cloud-status">Conectado al debate</span><button class="secondary" id="open-report">Informe de tiempos</button><button class="secondary" id="share-links">Enlaces de tótems</button><button class="secondary" id="logout">Cerrar sesión</button></div><section class="stage-bar" id="stage-bar" hidden aria-label="Pantalla única"><div class="stage-now"><span class="eyebrow">EN PANTALLA</span><strong id="stage-name"></strong><span id="stage-status"></span></div><div class="stage-time" id="stage-time"></div><div class="stage-actions"><button class="primary stage-play" id="stage-play">▶ &nbsp; Iniciar</button><button class="secondary" id="stage-next" title="Presenta e inicia al siguiente candidato (tecla →)">Siguiente &nbsp;⏭</button></div><div class="stage-pick"><span class="toolbar-label">Presentar</span><div class="stage-chips" id="stage-chips"></div><span class="stage-screens" id="stage-screens"></span></div></section><section class="round-bar" aria-label="Rondas del debate"><span class="toolbar-label">Ronda</span><div class="round-chips" id="round-chips"></div><div class="round-actions"><button class="secondary" id="next-round">Siguiente ronda &nbsp;→</button><button class="subtle" id="edit-rounds">Editar rondas</button></div></section><section class="toolbar" aria-label="Controles generales"><div class="toolbar-group"><span class="toolbar-label">Tiempo por intervención</span><div class="presets"><button class="preset" data-preset="60">1 min</button><button class="preset" data-preset="120">2 min</button><button class="preset" data-preset="180">3 min</button><button class="preset" id="custom-time">Personalizar</button></div><span class="divider"></span><label class="sound-label"><input id="sound" type="checkbox"> Aviso sonoro</label></div><div class="toolbar-group"><button class="primary" id="next-speaker" title="Pausa el turno actual e inicia el siguiente (tecla →)">Siguiente orador &nbsp;⏭</button><button class="secondary" id="pause-all">Ⅱ &nbsp; Pausar todos</button><button class="subtle" id="reset-all" title="Reiniciar todos los cronómetros">↺ &nbsp; Reiniciar</button></div></section><div class="status-line"><strong>Participantes <span class="muted-count" id="participant-count"></span></strong><span id="live-status">● &nbsp; Listos para comenzar</span></div><section class="cards" id="cards" aria-label="Cronómetros de los candidatos"></section><section class="bottom-row"><div class="guide-card"><div class="guide-symbol" aria-hidden="true">▣</div><div><h3>Identidad UNAMAD en cada tótem</h3><p>Añade la foto o el flyer de cada candidato y revisa su pantalla antes de proyectar. Para el proyector, usa la vista general.</p><button class="text-btn" id="help-bottom">Ver guía de conexión &nbsp; →</button></div></div><div class="shortcuts"><h3>El control, al alcance de tu teclado</h3><div class="shortcut-row"><span><kbd>1</kbd>…<kbd>8</kbd> Iniciar / pausar candidato</span><span><kbd>Espacio</kbd> Pausar / continuar</span><span><kbd>→</kbd> Siguiente orador</span></div></div></section><footer class="footer"><span><strong>● Un turno activo a la vez.</strong> Al cambiar de candidato, el anterior queda en pausa.</span><span id="footer-note">UNAMAD · Tótems en equipos independientes</span></footer></main>`;
   $("share-links").onclick = showLinks;
   $("open-report").onclick = openReport;
   $("logout").onclick = () => Cloud.logout().catch((e) => toast(e.message));
@@ -594,7 +666,12 @@ function renderPanel() {
     $("edit-rounds").onclick =
       setupForm;
   $("pause-all").onclick = pauseAll;
-  $("next-speaker").onclick = nextSpeaker;
+  $("next-speaker").onclick = $("stage-next").onclick = nextSpeaker;
+  $("stage-play").onclick = () => {
+    const c = onStage();
+    if (c) toggle(c.id);
+    else toast("Primero elige a quién presentar.");
+  };
   $("next-round").onclick = nextRound;
   $("reset-all").onclick = () => resetAll();
   $("take-control").onclick = takeControl;
@@ -678,6 +755,88 @@ function renderOverview() {
   renderOverviewGrid();
   setupScreen($("overview"));
 }
+const brandHead = (prefix) =>
+  `<div class="overview-head"><div class="overview-brand"><img src="assets/unamad-escudo-oficial.png" alt="Escudo de la UNAMAD"><div><strong>UNAMAD</strong><span id="${prefix}-event"></span></div></div><div class="overview-round"><span>RONDA</span><strong id="${prefix}-round"></strong></div></div>`;
+function renderPublic() {
+  document.body.classList.add("display-body", "overview-body");
+  document.title = "Pantalla del público — Debate UNAMAD";
+  $("app").innerHTML =
+    `<section class="public-screen" id="public">${brandHead("pub")}<div class="public-body" id="pub-body"><div class="public-photo" id="pub-photo"><img id="pub-image" alt="" hidden><div class="public-placeholder"><svg viewBox="0 0 160 190" fill="none" aria-hidden="true"><circle cx="80" cy="57" r="32" fill="currentColor"/><path d="M15 182v-17a65 65 0 0 1 130 0v17" fill="currentColor"/></svg></div></div><div class="public-info"><span class="public-label" id="pub-label"></span><h1 id="pub-name"></h1><p id="pub-role"></p><div class="public-clock"><span class="public-caption" id="pub-caption"></span><div class="public-time" id="pub-time"></div><div class="public-status"><i></i><span id="pub-status"></span></div><div class="ov-track"><div id="pub-progress"></div></div></div></div></div><div class="public-empty" id="pub-empty" hidden><img src="assets/unamad-escudo-oficial.png" alt=""><h1 id="pub-empty-title"></h1><p id="pub-empty-sub"></p></div>${screenTools}</section>`;
+  setupScreen($("public"));
+}
+function renderSpeaker() {
+  document.body.classList.add("display-body", "speaker-body");
+  document.title = "Pantalla de los candidatos — Debate UNAMAD";
+  $("app").innerHTML =
+    `<section class="speaker-screen" id="speaker"><div class="speaker-top"><span id="spk-round"></span><span id="spk-event"></span></div><div class="speaker-main"><h1 id="spk-name"></h1><div class="speaker-time" id="spk-time"></div><div class="speaker-status" id="spk-status"></div></div><div class="speaker-track"><div id="spk-progress"></div></div>${screenTools}</section>`;
+  setupScreen($("speaker"));
+}
+function paintPublic() {
+  const c = onStage(),
+    round = activeRound();
+  setText("pub-event", state.event);
+  setText("pub-round", round ? round.name : "Tiempo libre");
+  $("pub-body").hidden = !c;
+  $("pub-empty").hidden = !!c;
+  if (!c) {
+    setText("pub-empty-title", state.event);
+    setText(
+      "pub-empty-sub",
+      round ? "Ronda: " + round.name : "El debate comenzará en breve",
+    );
+    connectionLabel();
+    return;
+  }
+  const d = Totem.normalize(c.design, c.id);
+  $("public").style.setProperty("--ov-accent", d.accent);
+  $("pub-body").className = `public-body layout-${d.layout} ${mood(c)}`;
+  setText("pub-label", d.label || "CANDIDATO " + two(c.id));
+  setText("pub-name", c.name);
+  setText("pub-role", d.layout === "flyer" ? "" : d.role);
+  setText("pub-caption", caption(c));
+  setText("pub-time", format(remaining(c)));
+  setText("pub-status", status(c, true));
+  $("pub-progress").style.width = progress(c) + "%";
+  const photo = $("pub-photo"),
+    img = $("pub-image");
+  const asset =
+    d.layout === "minimal"
+      ? ""
+      : d[d.layout === "flyer" ? "flyer" : "photo"] || "";
+  img.style.objectFit = d.layout === "flyer" ? d.fit : "cover";
+  img.style.objectPosition = "50% " + d.position + "%";
+  if (photo.dataset.asset !== asset) {
+    photo.dataset.asset = asset;
+    img.hidden = true;
+    img.removeAttribute("src");
+    if (asset)
+      Totem.getImage(asset)
+        .then((url) => {
+          if (photo.dataset.asset !== asset || !url) return;
+          img.src = url;
+          img.alt = "Imagen de " + c.name;
+          img.hidden = false;
+        })
+        .catch(() =>
+          setTimeout(() => {
+            if (photo.dataset.asset === asset) delete photo.dataset.asset;
+          }, 3000),
+        );
+  }
+  connectionLabel();
+}
+function paintSpeaker() {
+  const c = onStage(),
+    round = activeRound();
+  setText("spk-event", state.event);
+  setText("spk-round", round ? round.name : "Tiempo libre");
+  $("speaker").className = "speaker-screen " + (c ? mood(c) : "idle");
+  setText("spk-name", c ? c.name : "En espera del siguiente orador");
+  setText("spk-time", c ? format(remaining(c)) : "");
+  setText("spk-status", c ? status(c, true) : "");
+  $("spk-progress").style.width = (c ? progress(c) : 0) + "%";
+  connectionLabel();
+}
 function renderOverviewGrid() {
   cardsKey = String(state.candidates.length);
   $("ov-grid").style.setProperty("--count", state.candidates.length);
@@ -689,7 +848,7 @@ function renderOverviewGrid() {
     .join("");
 }
 function refreshOwner() {
-  if (isDisplay || isOverview || !$("owner-warning")) return;
+  if (isDisplay || isScreen || !$("owner-warning")) return;
   const owner = isOwner();
   $("owner-warning").hidden = Cloud.connected;
   $("owner-warning-text").textContent = Cloud.resting
@@ -698,7 +857,7 @@ function refreshOwner() {
   $("take-control").textContent = Cloud.resting ? "Reanudar" : "Reintentar";
   document
     .querySelectorAll(
-      "[data-toggle],[data-reset],[data-adjust],[data-preset],[data-design],[data-round],#custom-time,#settings-btn,#edit-rounds,#next-round,#next-speaker,#pause-all,#reset-all,#sound,#clear-report",
+      "[data-toggle],[data-reset],[data-adjust],[data-preset],[data-design],[data-round],[data-present],[data-present-chip],#stage-play,#stage-next,#custom-time,#settings-btn,#edit-rounds,#next-round,#next-speaker,#pause-all,#reset-all,#sound,#clear-report",
     )
     .forEach((b) => (b.disabled = !owner));
 }
@@ -749,12 +908,18 @@ function paintOverview() {
     setText("ov-time", format(remaining(active)));
     $("ov-progress").style.width = progress(active) + "%";
   } else {
+    const next = onStage();
     speaker.className = "overview-speaker idle";
-    setText("ov-kicker", "TURNO EN PAUSA");
-    setText("ov-name", round ? round.name : state.event);
-    setText("ov-role", state.candidates.length + " candidatos");
-    setText("ov-time", "");
-    $("ov-progress").style.width = "0%";
+    setText("ov-kicker", next ? "A CONTINUACIÓN" : "TURNO EN PAUSA");
+    setText("ov-name", next ? next.name : round ? round.name : state.event);
+    setText(
+      "ov-role",
+      next
+        ? Totem.normalize(next.design, next.id).role
+        : state.candidates.length + " candidatos",
+    );
+    setText("ov-time", next ? format(remaining(next)) : "");
+    $("ov-progress").style.width = (next ? progress(next) : 0) + "%";
   }
   for (const c of state.candidates) {
     const tile = $("ov-tile-" + c.id);
@@ -777,8 +942,14 @@ function paintPanel() {
     hour12: false,
   });
   $("sound").checked = state.sound;
+  const single = singleMode(),
+    staged = onStage();
   setText("hero-count", `${two(count)} CANDIDATOS`);
+  setText("hero-mode", single ? "PANTALLA ÚNICA" : "TÓTEMS VERTICALES 9:16");
+  setText("share-links", single ? "Enlaces de pantallas" : "Enlaces de tótems");
   setText("participant-count", `/ ${two(count)}`);
+  $("stage-bar").hidden = !single;
+  if (single) paintStageBar(staged, round);
   state.candidates.forEach((c) => {
     const id = c.id;
     if (!$("card-" + id)) return;
@@ -787,12 +958,17 @@ function paintPanel() {
     $("card-" + id).style.setProperty("--accent", design.accent);
     setText(
       "design-badge-" + id,
-      "9:16 · " + (design.theme === "light" ? "Claro" : "Oscuro"),
+      single
+        ? layoutName[design.layout]
+        : "9:16 · " + (design.theme === "light" ? "Claro" : "Oscuro"),
     );
     setText("name-" + id, c.name);
     setText("time-" + id, format(ms));
     setText("status-" + id, status(c));
-    $("card-" + id).className = "candidate-card " + mood(c);
+    $("card-" + id).className =
+      "candidate-card " +
+      mood(c) +
+      (single && staged?.id === id ? " on-stage" : "");
     $("progress-" + id).style.width = progress(c) + "%";
     setText("assigned-" + id, "DE " + format(c.duration));
     setText(
@@ -811,11 +987,21 @@ function paintPanel() {
     );
     $("toggle-" + id).disabled =
       !isOwner() || (!c.running && ms <= 0 && !state.overtime);
-    const seen = Cloud.presence.find((x) => x.screen === id);
-    setText(
-      "screen-status-" + id,
-      seen && Cloud.now() - seen.at < 12000 ? "● Conectado" : "↗",
-    );
+    if (single) {
+      const live = staged?.id === id;
+      setText(
+        "present-label-" + id,
+        live ? "● En pantalla" : "▣  Presentar en pantalla",
+      );
+      setText("present-state-" + id, live && c.running ? "EN VIVO" : "");
+      setText("chip-name-" + id, c.name);
+    } else {
+      const seen = Cloud.presence.find((x) => x.screen === id);
+      setText(
+        "screen-status-" + id,
+        seen && Cloud.now() - seen.at < 12000 ? "● Conectado" : "↗",
+      );
+    }
   });
   document
     .querySelectorAll("[data-round]")
@@ -856,20 +1042,51 @@ function paintPanel() {
   $("cloud-status").classList.toggle("connection-lost", !Cloud.connected);
   if ($("report").hasAttribute("open")) renderReport();
 }
+const seenRecently = (screen) => {
+  const seen = Cloud.presence.find((x) => x.screen === screen);
+  return !!seen && Cloud.now() - seen.at < 12000;
+};
+function paintStageBar(c, round) {
+  setText("stage-name", c ? c.name : "Nadie en pantalla");
+  setText(
+    "stage-status",
+    c
+      ? status(c) + (round ? " · " + round.name : "")
+      : "Elige a quién presentar",
+  );
+  setText("stage-time", c ? format(remaining(c)) : "--:--");
+  $("stage-bar").className = "stage-bar " + (c ? mood(c) : "");
+  setText("stage-play", c?.running ? "Ⅱ  Pausar" : "▶  Iniciar");
+  $("stage-play").disabled =
+    !isOwner() ||
+    !c ||
+    (!c.running && remaining(c) <= 0 && !state.overtime);
+  document
+    .querySelectorAll("[data-present-chip]")
+    .forEach((b) =>
+      b.classList.toggle("selected", Number(b.dataset.presentChip) === c?.id),
+    );
+  setText(
+    "stage-screens",
+    `Público ${seenRecently(98) ? "●" : "○"} · Candidatos ${seenRecently(97) ? "●" : "○"}`,
+  );
+}
 function paint() {
   if (!state) return;
   if (isOverview) paintOverview();
+  else if (isPublic) paintPublic();
+  else if (isSpeaker) paintSpeaker();
   else if (isDisplay) paintDisplay();
   else paintPanel();
 }
 window.addEventListener("storage", (e) => {
-  if (e.key === "debate-panel-theme" && !isDisplay && !isOverview)
+  if (e.key === "debate-panel-theme" && !isDisplay && !isScreen)
     applyPanelTheme();
 });
 window.addEventListener("keydown", (e) => {
   if (
     isDisplay ||
-    isOverview ||
+    isScreen ||
     !state ||
     e.repeat ||
     e.ctrlKey ||
@@ -889,7 +1106,7 @@ window.addEventListener("keydown", (e) => {
   } else if (e.code === "Space" && e.target.tagName !== "BUTTON") {
     e.preventDefault();
     const active = state.candidates.find((c) => c.running);
-    toggle(active?.id || lastSpeaker || 1);
+    toggle(active?.id || state.stage || 1);
   }
 });
 function applyPanelTheme() {
@@ -1086,6 +1303,8 @@ async function boot() {
   await Cloud.init();
   state = Cloud.state;
   if (isOverview) renderOverview();
+  else if (isPublic) renderPublic();
+  else if (isSpeaker) renderSpeaker();
   else if (isDisplay) renderDisplay();
   else renderPanel();
   const previous = new Map(state.candidates.map((c) => [c.id, remaining(c)]));
@@ -1094,8 +1313,8 @@ async function boot() {
       state = next;
       if (isOverview) {
         if (String(state.candidates.length) !== cardsKey) renderOverviewGrid();
-      } else if (!isDisplay) {
-        if (String(state.candidates.length) !== cardsKey) renderCards();
+      } else if (!isDisplay && !isScreen) {
+        if (cardsSignature() !== cardsKey) renderCards();
         if (JSON.stringify(state.rounds) !== roundsKey) renderRounds();
       }
       paint();
@@ -1109,7 +1328,7 @@ async function boot() {
   paint();
   Cloud.startPolling();
   setInterval(() => {
-    if (Cloud.role === "admin" && !isDisplay && !isOverview) {
+    if (Cloud.role === "admin" && !isDisplay && !isScreen) {
       for (const c of state.candidates) {
         const value = remaining(c);
         if ((previous.get(c.id) ?? 0) > 0 && value <= 0 && c.running) beep();

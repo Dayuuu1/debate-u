@@ -1,6 +1,6 @@
 # Debate al Rectorado · UNAMAD
 
-Sistema para moderar los tiempos de un debate: un panel protegido para el moderador, un tótem vertical por candidato y una vista general para el proyector o la transmisión. Todo se sincroniza por Internet a través de **Vercel + PostgreSQL en Neon**. Está hecho con HTML, CSS y JavaScript, y una API en Node.js; no requiere frameworks.
+Sistema para moderar los tiempos de un debate: un panel protegido para el moderador y, según el evento, un tótem vertical por candidato o **una sola pantalla** para el público y otra para los candidatos. También tiene una vista general para el proyector o la transmisión. Todo se sincroniza por Internet a través de **Vercel + PostgreSQL en Neon**. Está hecho con HTML, CSS y JavaScript, y una API en Node.js; no requiere frameworks.
 
 ![Panel del moderador](docs/capturas/panel.jpg)
 
@@ -16,9 +16,13 @@ Sistema para moderar los tiempos de un debate: un panel protegido para el modera
 - **Informe de tiempos**: cuánto habló realmente cada candidato en cada ronda, con exportación a CSV (Excel) e impresión o PDF.
 - Atajos de teclado (`1`–`8`, `Espacio`, `→`), aviso sonoro, tema claro u oscuro y modo reposo automático.
 
-**Para las pantallas**
+**Para las pantallas** (se elige el modo en «Configurar debate»)
 
-- Tótems verticales 9:16 con foto o flyer, cargo, color y tema por candidato.
+- **Un tótem por candidato:** tótems verticales 9:16 con foto o flyer, cargo, color y tema por candidato.
+- **Pantalla única:**
+  - Una **pantalla del público** (16:9) con el candidato presentado, su foto y su tiempo.
+  - Una **pantalla de los candidatos** con un cronómetro gigante que cambia de verde a ámbar y a rojo.
+  - El moderador pulsa **Presentar en pantalla** y luego **▶** para iniciar el conteo.
 - Cada tótem **recuerda su enlace** 30 días: después de abrirlo una vez, basta con `?pantalla=N`.
 - Evitan que la pantalla se apague, ocultan el cursor y funcionan en modo quiosco.
 - **Vista general 16:9** con todos los candidatos y el orador actual, para el proyector. Tiene una variante con fondo transparente para OBS.
@@ -38,6 +42,14 @@ Sistema para moderar los tiempos de un debate: un panel protegido para el modera
 | Tótem 9:16 | Vista general 16:9 |
 | --- | --- |
 | ![Tótem](docs/capturas/totem.jpg) | ![Vista general](docs/capturas/vista-general.jpg) |
+
+**Modo pantalla única**
+
+| Pantalla del público | Pantalla de los candidatos |
+| --- | --- |
+| ![Pantalla del público](docs/capturas/pantalla-publico.jpg) | ![Pantalla de los candidatos](docs/capturas/pantalla-candidatos.jpg) |
+
+![Barra «En pantalla» del panel](docs/capturas/panel-pantalla-unica.jpg)
 
 ## 1. Requisitos
 
@@ -97,6 +109,15 @@ La vista previa al compartir usa `https://debate-u-nine.vercel.app/assets/og-deb
 4. Abre el panel unos minutos antes. Cada tótem está listo cuando su tarjeta indica **● Conectado**.
 5. Elige la ronda, inicia el primer turno y usa **Siguiente orador** (`→`).
 6. Al terminar, abre **Informe de tiempos** y expórtalo a CSV o PDF.
+
+**Modo pantalla única (sin tótems).** Úsalo cuando habrá una pantalla para el público y otra para los candidatos.
+
+1. En **Configurar debate**, elige **Pantalla única** y guarda.
+2. En **Enlaces de pantallas**, abre la *Pantalla del público* en el equipo del proyector o la TV del público. Abre la *Pantalla de los candidatos* en el monitor que miran los oradores.
+3. En la barra **En pantalla** del panel, pulsa el nombre del candidato (o «Presentar en pantalla» en su tarjeta). Ambas pantallas lo muestran con su tiempo completo.
+4. Pulsa **▶ Iniciar** para empezar el conteo. **Siguiente** (o `→`) presenta e inicia al siguiente candidato.
+
+Presentar a otro candidato pausa el turno que estaba corriendo. Mientras nadie esté presentado, la pantalla del público muestra el nombre del evento. Al lado de la barra verás si las dos pantallas están conectadas (●).
 
 **Tótem en modo quiosco (sin barras del navegador).** Después de abrir el enlace completo una vez, crea un acceso directo:
 
