@@ -202,6 +202,83 @@
         </div>
       </form>
     </dialog>
+    <dialog id="standby-dialog">
+      <div class="dialog-head">
+        <div>
+          <span class="eyebrow">CUANDO NADIE ESTÁ HABLANDO</span>
+          <h2>Fondo de espera</h2>
+        </div>
+        <button
+          class="icon-btn"
+          data-close="standby-dialog"
+          aria-label="Cerrar"
+        >
+          ✕
+        </button>
+      </div>
+      <label class="check-field"
+        ><input type="checkbox" id="standby-enabled" /><span
+          >Mostrar el fondo en los tótems cuando nadie está hablando. Aparece a
+          los 4 segundos y desaparece al iniciar un turno.</span
+        ></label
+      >
+      <div class="standby-slots">
+        <div class="standby-slot">
+          <div class="standby-thumb vertical" id="standby-thumb-vertical">
+            <img alt="" hidden /><span>Fondo institucional</span>
+          </div>
+          <div class="standby-slot-info">
+            <strong>Tótems · vertical 9:16</strong>
+            <small>Recomendado 1080 × 1920 px.</small>
+            <input
+              type="file"
+              id="standby-file-vertical"
+              accept="image/jpeg,image/png,image/webp"
+              aria-label="Subir fondo vertical para los tótems"
+            />
+            <button type="button" class="text-btn" id="standby-clear-vertical">
+              Usar el fondo institucional
+            </button>
+          </div>
+        </div>
+        <div class="standby-slot">
+          <div class="standby-thumb horizontal" id="standby-thumb-horizontal">
+            <img alt="" hidden /><span>Fondo institucional</span>
+          </div>
+          <div class="standby-slot-info">
+            <strong>Pantalla del público · horizontal 16:9</strong>
+            <small
+              >Recomendado 1920 × 1080 px. Se muestra cuando no hay nadie en
+              pantalla.</small
+            >
+            <input
+              type="file"
+              id="standby-file-horizontal"
+              accept="image/jpeg,image/png,image/webp"
+              aria-label="Subir fondo horizontal para la pantalla del público"
+            />
+            <button
+              type="button"
+              class="text-btn"
+              id="standby-clear-horizontal"
+            >
+              Usar el fondo institucional
+            </button>
+          </div>
+        </div>
+      </div>
+      <p class="small muted">
+        Sin imagen se usa el fondo institucional de la UNAMAD con el nombre del
+        evento y la ronda. JPG, PNG o WebP; por ejemplo, el afiche del evento.
+      </p>
+      <div class="dialog-actions">
+        <button type="button" class="secondary" data-close="standby-dialog">
+          Cancelar</button
+        ><button type="button" class="primary" id="standby-save">
+          Guardar fondo
+        </button>
+      </div>
+    </dialog>
     <dialog id="report">
       <div class="dialog-head">
         <div>

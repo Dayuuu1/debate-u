@@ -414,3 +414,92 @@ test("Old default texts are replaced by the UNAMAD branding", () => {
   assert.equal(normalizeState({ event: "Mi debate" }).event, "Mi debate");
   assert.equal(defaultState().event, "Debate UNAMAD");
 });
+test("Standby background settings are validated and kept", () => {
+  assert.deepEqual(defaultState().standby, {
+    enabled: true,
+    vertical: null,
+    horizontal: null,
+  });
+  const id = "11111111-2222-4333-8444-555555555555";
+  let s = reduceCommand(
+    defaultState(),
+    { type: "standby", enabled: false, vertical: id, horizontal: null },
+    0,
+  );
+  assert.deepEqual(s.standby, { enabled: false, vertical: id, horizontal: null });
+  assert.throws(() => reduceCommand(s, { type: "standby", enabled: "si" }, 0));
+  assert.throws(() =>
+    reduceCommand(
+      s,
+      { type: "standby", enabled: true, vertical: "javascript:x" },
+      0,
+    ),
+  );
+  s = reduceCommand(
+    s,
+    {
+      type: "settings",
+      event: "Debate",
+      warning: 30,
+      overtime: true,
+      candidates: [{ name: "A", duration: 60000 }],
+    },
+    0,
+  );
+  assert.equal(s.standby.vertical, id);
+  assert.deepEqual(
+    normalizeState({ standby: { enabled: "x", vertical: "malo" } }).standby,
+    { enabled: true, vertical: null, horizontal: null },
+  );
+});
+test("Standby images must exist and survive the image cleanup", async () => {
+  const login = await api("login", {
+    method: "POST",
+    data: { password: process.env.ADMIN_PASSWORD },
+  });
+  const admin = login.response.headers.get("set-cookie").split(";")[0];
+  const pixel =
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==";
+  const upload = async () =>
+    (
+      await api("upload", {
+        method: "POST",
+        auth: admin,
+        data: { mime: "image/png", data: pixel },
+      })
+    ).data.id;
+  const kept = await upload(),
+    unused = await upload();
+  for (const id of [kept, unused])
+    await pg.query(
+      "UPDATE debate_images SET created_at=clock_timestamp()-interval '1 day' WHERE id=$1",
+      [id],
+    );
+  const version = (await api("state", { auth: admin })).data.version;
+  const missing = await api("command", {
+    method: "POST",
+    auth: admin,
+    data: {
+      version,
+      command: {
+        type: "standby",
+        enabled: true,
+        vertical: "00000000-0000-4000-8000-000000000000",
+        horizontal: null,
+      },
+    },
+  });
+  assert.equal(missing.response.status, 400);
+  const saved = await api("command", {
+    method: "POST",
+    auth: admin,
+    data: {
+      version,
+      command: { type: "standby", enabled: true, vertical: kept, horizontal: null },
+    },
+  });
+  assert.equal(saved.response.status, 200);
+  assert.equal(saved.data.state.standby.vertical, kept);
+  assert.equal(await db.imageExists(kept), true);
+  assert.equal(await db.imageExists(unused), false);
+});

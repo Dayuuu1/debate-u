@@ -23,6 +23,7 @@ Sistema para moderar los tiempos de un debate: un panel protegido para el modera
   - Una **pantalla del público** (16:9) con el candidato presentado, su foto y su tiempo.
   - Una **pantalla de los candidatos** con un cronómetro gigante que cambia de verde a ámbar y a rojo.
   - El moderador pulsa **Presentar en pantalla** y luego **▶** para iniciar el conteo.
+- **Fondo de espera:** cuando nadie está hablando, los tótems muestran el fondo institucional (escudo, UNAMAD, universidad, evento y ronda) o la imagen que subas, por ejemplo el afiche del evento. La pantalla del público hace lo mismo cuando no hay nadie presentado.
 - Cada tótem **recuerda su enlace** 30 días: después de abrirlo una vez, basta con `?pantalla=N`.
 - Evitan que la pantalla se apague, ocultan el cursor y funcionan en modo quiosco.
 - **Vista general 16:9** con todos los candidatos y el orador actual, para el proyector. Tiene una variante con fondo transparente para OBS.
@@ -39,9 +40,9 @@ Sistema para moderar los tiempos de un debate: un panel protegido para el modera
 | --- | --- |
 | ![Configurar debate](docs/capturas/configurar.jpg) | ![Informe de tiempos](docs/capturas/informe.jpg) |
 
-| Tótem 9:16 | Vista general 16:9 |
-| --- | --- |
-| ![Tótem](docs/capturas/totem.jpg) | ![Vista general](docs/capturas/vista-general.jpg) |
+| Tótem 9:16 | Tótem en espera | Vista general 16:9 |
+| --- | --- | --- |
+| ![Tótem](docs/capturas/totem.jpg) | ![Tótem con el fondo de espera](docs/capturas/totem-espera.jpg) | ![Vista general](docs/capturas/vista-general.jpg) |
 
 **Modo pantalla única**
 
@@ -109,6 +110,16 @@ La vista previa al compartir usa `https://debate-u-nine.vercel.app/assets/og-deb
 4. Abre el panel unos minutos antes. Cada tótem está listo cuando su tarjeta indica **● Conectado**.
 5. Elige la ronda, inicia el primer turno y usa **Siguiente orador** (`→`).
 6. Al terminar, abre **Informe de tiempos** y expórtalo a CSV o PDF.
+
+**Fondo de espera.** En el panel, pulsa **Fondo de espera**:
+
+- Activa o desactiva el fondo de los tótems. Aparece 4 segundos después de que nadie esté hablando y desaparece al iniciar un turno.
+- Opcionalmente, sube una imagen vertical (1080 × 1920) para los tótems y otra horizontal (1920 × 1080) para la pantalla del público.
+- Sin imágenes se usa el fondo institucional de la UNAMAD.
+
+En pantalla única, el botón **▣ Fondo** de la barra «En pantalla» pausa el turno y muestra el fondo en la pantalla del público.
+
+![Diálogo Fondo de espera](docs/capturas/fondo-espera.jpg)
 
 **Modo pantalla única (sin tótems).** Úsalo cuando habrá una pantalla para el público y otra para los candidatos.
 

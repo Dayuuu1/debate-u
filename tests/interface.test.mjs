@@ -232,3 +232,46 @@ test("Public and speaker screens show the presented candidate", async () => {
   assert.equal(empty.getElementById("pub-empty").hidden, false);
   assert.equal(empty.querySelectorAll(".candidate-card").length, 0);
 });
+test("Totems show the standby background while nobody is speaking", async () => {
+  const idle = (await page("?pantalla=1")).window.document;
+  assert.equal(idle.getElementById("standby").hidden, false);
+  assert.ok(idle.getElementById("projection").classList.contains("standby-on"));
+  assert.equal(idle.getElementById("standby-event").textContent, "Debate UNAMAD");
+  assert.equal(
+    idle.getElementById("standby-seat").textContent,
+    "TÓTEM 01 · Candidato 1",
+  );
+  assert.equal(
+    idle.getElementById("standby-note").textContent,
+    "El debate comenzará en breve",
+  );
+  const running = reduceCommand(defaultState(), { type: "toggle", id: 1 }, Date.now());
+  const live = (await page("?pantalla=1", running)).window.document;
+  assert.equal(live.getElementById("standby").hidden, true);
+  const off = {
+    ...defaultState(),
+    standby: { enabled: false, vertical: null, horizontal: null },
+  };
+  const disabled = (await page("?pantalla=1", off)).window.document;
+  assert.equal(disabled.getElementById("standby").hidden, true);
+});
+test("Moderator turns the standby background off and shows it on the public screen", async () => {
+  const { window, cloud } = await page("", { ...singleState(), stage: 2 });
+  const doc = window.document;
+  doc.querySelector('[data-present-chip="0"]').onclick();
+  await flush();
+  assert.equal(cloud.state.stage, null);
+  assert.ok(
+    doc.querySelector('[data-present-chip="0"]').classList.contains("selected"),
+  );
+  assert.match(
+    doc.getElementById("live-status").textContent,
+    /fondo en la pantalla del público/,
+  );
+  doc.getElementById("open-standby").onclick();
+  assert.ok(doc.getElementById("standby-dialog").hasAttribute("open"));
+  doc.getElementById("standby-enabled").checked = false;
+  await doc.getElementById("standby-save").onclick();
+  assert.equal(cloud.state.standby.enabled, false);
+  assert.equal(doc.getElementById("standby-dialog").hasAttribute("open"), false);
+});

@@ -1027,3 +1027,227 @@
     grid-template-columns: 1fr;
   }
 }
+/* Fondo de espera: tótems y pantalla del público cuando nadie está hablando */
+.standby-on .totem-stage {
+  display: none;
+}
+.standby-screen {
+  position: relative;
+  width: min(100vw, 56.25dvh);
+  aspect-ratio: 9 / 16;
+  flex-shrink: 0;
+  container-type: inline-size;
+  overflow: hidden;
+  color: #fff4fa;
+  font-family: Manrope, "DM Sans", sans-serif;
+  background:
+    linear-gradient(180deg, #1b0a17e6 0%, #1b0a1799 45%, #1b0a17f2 100%),
+    url("assets/unamad-fondo-oscuro-v2.webp") right center / auto 100%
+      no-repeat,
+    #1b0a17;
+}
+.standby-screen.theme-light {
+  color: #472236;
+  background:
+    linear-gradient(180deg, #fff9fcee 0%, #fff9fc99 45%, #fff9fcf2 100%),
+    url("assets/unamad-fondo-claro-v2.webp") right center / auto 100%
+      no-repeat,
+    #fff9fc;
+}
+.standby-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+.standby-image:not([hidden]) + .standby-default {
+  display: none;
+}
+.standby-default {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 3cqw;
+  padding: 10cqw 8cqw 16cqw;
+}
+.standby-crest {
+  width: 20cqw;
+  height: auto;
+}
+.standby-wordmark {
+  font-family: Manrope, sans-serif;
+  font-weight: 800;
+  font-size: 14cqw;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: #ff70a6;
+}
+.theme-light .standby-wordmark {
+  color: #d60050;
+}
+.standby-wordmark span {
+  display: block;
+  font-family: "DM Sans", sans-serif;
+  font-weight: 500;
+  font-size: 3.4cqw;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  margin-top: 2cqw;
+  color: #e7c3d5;
+  text-wrap: balance;
+}
+.theme-light .standby-wordmark span,
+.theme-light .standby-note {
+  color: #84566e;
+}
+.standby-rule {
+  width: 40cqw;
+  height: 0.5cqw;
+  border-radius: 1cqw;
+  background: #d60050;
+  margin: 3cqw 0;
+}
+.standby-default h1 {
+  text-wrap: balance;
+  font-size: 8cqw;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.standby-round {
+  font-size: 3.2cqw;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 800;
+  padding: 1.6cqw 4cqw;
+  border-radius: 10cqw;
+  background: #d60050;
+  color: white;
+}
+.standby-round:empty {
+  display: none;
+}
+.standby-note {
+  font-size: 4cqw;
+  color: #e7c3d5;
+}
+.standby-seat {
+  position: absolute;
+  bottom: 6cqw;
+  left: 6cqw;
+  right: 6cqw;
+  font-size: 2.6cqw;
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #c9a5b8;
+  overflow-wrap: anywhere;
+}
+.theme-light .standby-seat {
+  color: #9b7283;
+}
+.public-standby-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+.public-empty .standby-wordmark {
+  font-size: 7vh;
+}
+.public-empty .standby-wordmark span {
+  font-size: 2.2vh;
+  margin-top: 1vh;
+}
+.public-empty h1 {
+  margin-top: 3vh;
+}
+#standby-dialog {
+  max-width: 640px;
+  max-height: 92dvh;
+}
+.standby-slots {
+  display: grid;
+  gap: 12px;
+  margin: 14px 0;
+}
+.standby-slot {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e7dfe4;
+  border-radius: 10px;
+}
+.standby-thumb {
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 6px;
+  color: #f2dce7;
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  background: #1b0a17 url("assets/unamad-fondo-oscuro-v2.webp") right
+    center / cover no-repeat;
+}
+.standby-thumb.vertical {
+  width: 72px;
+  height: 128px;
+}
+.standby-thumb.horizontal {
+  width: 160px;
+  height: 90px;
+}
+.standby-thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.standby-thumb img:not([hidden]) + span {
+  display: none;
+}
+.standby-slot-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  font-size: 12px;
+}
+.standby-slot-info small {
+  color: #8a7b86;
+  line-height: 1.5;
+}
+.standby-slot-info input {
+  font-size: 11px;
+  max-width: 100%;
+}
+.standby-slot-info .text-btn {
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.dark-panel .standby-slot {
+  border-color: #493340;
+}
+.dark-panel .standby-slot-info small {
+  color: #cdb2c2;
+}
+@media (max-width: 600px) {
+  .standby-slot {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
